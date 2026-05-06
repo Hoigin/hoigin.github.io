@@ -1,22 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <title>Hoigin's Blog</title>
-  <link rel="stylesheet" href="/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" id="themeGithub" href="./src/styles/github.css" media="all">
+    <link rel="stylesheet" id="themeNight" href="./src/styles/night.css" media="not all">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Helvetica, Arial, "Segoe UI Emoji", "SF Pro", sans-serif;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                justify-content: flex-start;
+                padding-right: 24px;
+            }
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .blog-title {
+            font-size: 2em;
+            font-weight: bold;
+            border-bottom: none;
+            margin: 0;
+        }
+
+        #dark-mode-toggle {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: transparent;
+            border: none;
+            padding: 4px;
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            z-index: 10;
+            border-radius: 50%;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        #dark-mode-toggle:hover,
+        #dark-mode-toggle:focus,
+        #dark-mode-toggle:active {
+            outline: none;
+            background: transparent !important;
+            box-shadow: none;
+        }
+
+        body {
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            padding: 30px;
+            position: relative;
+        }
+
+        .post-list a {
+            display: block;
+            padding: 12px 0;
+            text-decoration: none;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .post-list a:last-child {
+            border-bottom: none;
+        }
+
+        .post-list a::before {
+            content: "📄 ";
+            margin-right: 8px;
+        }
+
+        .post-list a:hover {
+            color: #e74c3c;
+        }
+
+        .no-posts {
+            text-align: center;
+            font-size: 1em;
+            padding: 20px 0;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 18px;
+            }
+            .blog-title {
+                font-size: 1.6em;
+            }
+            #dark-mode-toggle {
+                top: -6px;
+                right: -6px;
+                font-size: 1.3em;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Hoigin's Blog</h1>
-  </header>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <img src="./resources/avatar.jpg" alt="Avatar" class="avatar">
+                <h1 class="blog-title">Hoigin's Blog</h1>
+                <button id="dark-mode-toggle" aria-label="切换深色模式">☀️</button>
+            </div>
 
-  <main>
-    <!-- 动态内容占位符（build_index.ts 将替换此处） -->
-    {{POST_LIST}}
-  </main>
+            <div class="post-list">
+                {{POST_LIST}}
+            </div>
+        </div>
+    </div>
 
-  <footer>
-    <p>Last updated: {{BUILD_TIMESTAMP}}</p>
-  </footer>
+    <script>
+        const themeToggle = document.getElementById('dark-mode-toggle');
+        const githubSheet = document.getElementById('themeGithub');
+        const nightSheet = document.getElementById('themeNight');
+
+        const saved = localStorage.getItem('theme') || 'github';
+        if (saved === 'night') {
+            githubSheet.media = 'not all';
+            nightSheet.media = 'all';
+            themeToggle.textContent = '🌙';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isNight = nightSheet.media === 'all';
+            githubSheet.media = isNight ? 'all' : 'not all';
+            nightSheet.media = isNight ? 'not all' : 'all';
+            themeToggle.textContent = isNight ? '☀️' : '🌙';
+            localStorage.setItem('theme', isNight ? 'github' : 'night');
+        });
+    </script>
 </body>
 </html>
