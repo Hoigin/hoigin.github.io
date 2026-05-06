@@ -6,7 +6,8 @@
     --card-shadow: rgba(0, 0, 0, 0.3);
     --title-color: #d4d4d4;
     --link-color: #d4d4d4;
-    --link-hover: #e74c3c;
+    --title-link-hover: #e74c3c;
+    --icon-link-hover: #d4d4d4;
     --border-color: #404040;
     --muted-color: #808080;
     --state-color: #808080;

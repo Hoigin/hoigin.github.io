@@ -48,16 +48,17 @@
             font-size: 0.85rem;
         }
 
-        #dark-mode-toggle {
+        #theme-toggle {
             position: absolute;
             top: 0;
             right: 0;
             background: transparent;
             border: none;
             padding: 0.25rem;
-            font-size: 1.4rem;
-            color: var(--toggle-color);
+            width: 1.5rem;
+            height: 1.5rem;
             cursor: pointer;
+            color: var(--toggle-color);
             transition: color 0.2s ease;
             z-index: 10;
             border-radius: 50%;
@@ -65,15 +66,21 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-appearance: none;
             appearance: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        #dark-mode-toggle:hover,
-        #dark-mode-toggle:focus,
-        #dark-mode-toggle:active {
+        #theme-toggle svg {
+            fill: currentColor;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        #theme-toggle:hover {
             outline: none;
-            background: transparent !important;
-            box-shadow: none;
-            color: var(--link-hover);
+            background: transparent;
+            color: var(--icon-link-hover);
         }
 
         body {
@@ -113,7 +120,7 @@
         }
 
         .post-item:hover {
-            color: var(--link-hover);
+            color: var(--title-link-hover);
         }
 
         .post-title {
@@ -127,7 +134,7 @@
         }
 
         .post-item:hover .post-title {
-            color: var(--link-hover);
+            color: var(--title-link-hover);
         }
 
         .post-date {
@@ -154,8 +161,13 @@
             .blog-title {
                 font-size: 1.4rem;
             }
-            #dark-mode-toggle {
-                font-size: 1.3rem;
+            #theme-toggle {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+            #theme-toggle svg {
+                width: 1rem;
+                height: 1rem;
             }
         }
     </style>
@@ -169,7 +181,9 @@
                     <h1 class="blog-title">Hoigin's Blog</h1>
                     <div class="state">思维是发散的，只有写下来才会收敛成文字。</div>
                 </div>
-                <button id="dark-mode-toggle" aria-label="切换深色模式">☀️</button>
+                <button id="theme-toggle" aria-label="切换主题">
+                    <svg viewBox="0 0 16 16"><path d="M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z"></path></svg>
+                </button>
             </div>
 
             <div class="post-list">
@@ -186,22 +200,29 @@
     </div>
 
     <script>
-        const themeToggle = document.getElementById('dark-mode-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
         const lightSheet = document.getElementById('themeLight');
         const darkSheet = document.getElementById('themeDark');
+
+        const sunPath = "M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z";
+        const moonPath = "M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z";
+
+        function setIcon(path) {
+            themeToggle.querySelector('svg path').setAttribute('d', path);
+        }
 
         const saved = localStorage.getItem('theme') || 'light';
         if (saved === 'dark') {
             lightSheet.media = 'not all';
             darkSheet.media = 'all';
-            themeToggle.textContent = '🌙';
+            setIcon(moonPath);
         }
 
         themeToggle.addEventListener('click', () => {
             const isDark = darkSheet.media === 'all';
             lightSheet.media = isDark ? 'all' : 'not all';
             darkSheet.media = isDark ? 'not all' : 'all';
-            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            setIcon(isDark ? sunPath : moonPath);
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
         });
     </script>
