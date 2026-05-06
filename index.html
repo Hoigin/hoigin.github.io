@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniBlog</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            font-size: 3.2rem;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            letter-spacing: -0.5px;
+        }
+        .quote {
+            font-size: 1.4rem;
+            color: #34495e;
+            max-width: 650px;
+            text-align: center;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            font-style: italic;
+            border-left: 4px solid #3498db;
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 2.4rem; }
+            .quote { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <h1>MiniBlog</h1>
+    <div class="quote">思维是发散的，只有写下来才会收敛成文字。</div>
+</body>
+</html>
