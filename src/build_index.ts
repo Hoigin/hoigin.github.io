@@ -1,9 +1,10 @@
 /**
  * build_index.ts — 博客文章列表构建脚本
  *
- * 功能：扫描 ./posts/ 下的日期子目录，从每个 post.html 中提取标题，
+ * 功能：扫描 ./posts/ 下的日期子目录，从每个 .html 文件中提取标题，
  *       生成 HTML 列表片段替换 index_template.html 中的 {{POST_LIST}}，
  *       输出最终的 index.html。
+ *       一个目录下可以有任意名称的 .html 文件，每个文件对应一篇文章。
  *
  * 运行方式：npx tsx src/build_index.ts
  */
@@ -21,8 +22,8 @@ const TEMPLATE_FILE = path.join(ROOT_DIR, 'index_template.html');
 const OUTPUT_FILE = path.join(ROOT_DIR, 'index.html');
 
 /**
- * 从 post.html 中提取文章标题。
- * 依次尝试 <title> 和 <h1>，若均不存在则返回目录名。
+ * 从 HTML 文件中提取文章标题。
+ * 依次尝试 <title> 和 <h1>，若均不存在则用文件名作为占位。
  */
 function extractTitle(htmlContent: string, fallbackName: string): string {
     const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/i);
@@ -48,6 +49,7 @@ function formatDate(dirName: string): string {
 
 /**
  * 扫描 posts 目录，按日期倒序收集文章信息。
+ * 每个日期子目录下的所有 .html 文件都会被收录。
  */
 function scanPosts(): Array<{ title: string; date: string; dateDir: string; link: string }> {
     if (!fs.existsSync(POSTS_DIR)) {
@@ -61,24 +63,31 @@ function scanPosts(): Array<{ title: string; date: string; dateDir: string; link
         const entryPath = path.join(POSTS_DIR, entry);
         if (!fs.statSync(entryPath).isDirectory()) continue;
 
-        const postFilePath = path.join(entryPath, 'post.html');
-        if (!fs.existsSync(postFilePath)) {
-            console.warn(`目录 ${entry} 中未找到 post.html，跳过。`);
-            continue;
+        for (const file of fs.readdirSync(entryPath)) {
+            if (!file.endsWith('.html')) continue;
+            // 跳过 .assets 等辅助目录中可能误识别的文件
+            const filePath = path.join(entryPath, file);
+            if (!fs.statSync(filePath).isFile()) continue;
+
+            const title = extractTitle(fs.readFileSync(filePath, 'utf-8'), file.replace('.html', ''));
+            const relativeLink = path.join('posts', entry, file).split(path.sep).join('/');
+
+            posts.push({
+                title,
+                date: formatDate(entry),
+                dateDir: entry,
+                link: `./${relativeLink}`,
+            });
         }
-
-        const title = extractTitle(fs.readFileSync(postFilePath, 'utf-8'), entry);
-        const relativeLink = path.join('posts', entry, 'post.html').split(path.sep).join('/');
-
-        posts.push({
-            title,
-            date: formatDate(entry),
-            dateDir: entry,
-            link: `./${relativeLink}`,
-        });
     }
 
-    posts.sort((a, b) => b.dateDir.localeCompare(a.dateDir));
+    // 按日期倒序排列，同一天的多篇文章按文件名排序
+    posts.sort((a, b) => {
+        const dateCompare = b.dateDir.localeCompare(a.dateDir);
+        if (dateCompare !== 0) return dateCompare;
+        return a.link.localeCompare(b.link);
+    });
+
     return posts;
 }
 
