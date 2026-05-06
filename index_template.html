@@ -3,54 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" id="themeGithub" href="./src/styles/github.css" media="all">
-    <link rel="stylesheet" id="themeNight" href="./src/styles/night.css" media="not all">
+    <link rel="stylesheet" id="themeLight" href="./src/styles/light.css" media="all">
+    <link rel="stylesheet" id="themeDark" href="./src/styles/dark.css" media="not all">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Helvetica Neue", Helvetica, Arial, "Segoe UI Emoji", "SF Pro", sans-serif;
+            font-family: "Microsoft YaHei", sans-serif;
         }
 
         .header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 16px;
+            margin-bottom: 28px;
             position: relative;
         }
 
-        @media (max-width: 600px) {
-            .header {
-                justify-content: flex-start;
-                padding-right: 24px;
-            }
-        }
-
         .avatar {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
+            border: 1px solid var(--avatar-border);
+        }
+
+        .header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .blog-title {
-            font-size: 2em;
+            font-size: 1.8em;
             font-weight: bold;
+            color: var(--title-color);
             border-bottom: none;
             margin: 0;
         }
 
+        .state {
+            color: var(--state-color);
+            font-size: 0.85em;
+        }
+
         #dark-mode-toggle {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: 0;
+            right: 0;
             background: transparent;
             border: none;
             padding: 4px;
             font-size: 1.4em;
+            color: var(--toggle-color);
             cursor: pointer;
             transition: color 0.2s ease;
             z-index: 10;
@@ -67,9 +73,12 @@
             outline: none;
             background: transparent !important;
             box-shadow: none;
+            color: var(--link-hover);
         }
 
         body {
+            background-color: var(--page-bg);
+            color: var(--page-text);
             line-height: 1.6;
             padding: 20px;
         }
@@ -80,36 +89,56 @@
         }
 
         .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 6px 20px var(--card-shadow);
             overflow: hidden;
             padding: 30px;
             position: relative;
         }
 
-        .post-list a {
-            display: block;
+        .post-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
             text-decoration: none;
             font-size: 1em;
-            font-weight: bold;
         }
 
-        .post-list a:last-child {
+        .post-item:last-child {
             border-bottom: none;
         }
 
-        .post-list a::before {
-            content: "📄 ";
-            margin-right: 8px;
+        .post-item:hover {
+            color: var(--link-hover);
         }
 
-        .post-list a:hover {
-            color: #e74c3c;
+        .post-title {
+            color: var(--link-color);
+            font-weight: bold;
+        }
+
+        .post-title::before {
+            content: "📄 ";
+            margin-right: 4px;
+        }
+
+        .post-item:hover .post-title {
+            color: var(--link-hover);
+        }
+
+        .post-date {
+            color: var(--muted-color);
+            font-size: 0.85em;
+            white-space: nowrap;
         }
 
         .no-posts {
             text-align: center;
+            color: var(--muted-color);
             font-size: 1em;
             padding: 20px 0;
         }
@@ -118,12 +147,14 @@
             .card {
                 padding: 18px;
             }
+            .avatar {
+                width: 60px;
+                height: 60px;
+            }
             .blog-title {
-                font-size: 1.6em;
+                font-size: 1.4em;
             }
             #dark-mode-toggle {
-                top: -6px;
-                right: -6px;
                 font-size: 1.3em;
             }
         }
@@ -134,7 +165,10 @@
         <div class="card">
             <div class="header">
                 <img src="./resources/avatar.jpg" alt="Avatar" class="avatar">
-                <h1 class="blog-title">Hoigin's Blog</h1>
+                <div class="header-info">
+                    <h1 class="blog-title">Hoigin's Blog</h1>
+                    <div class="state">思维是发散的，只有写下来才会收敛成文字。</div>
+                </div>
                 <button id="dark-mode-toggle" aria-label="切换深色模式">☀️</button>
             </div>
 
@@ -146,22 +180,22 @@
 
     <script>
         const themeToggle = document.getElementById('dark-mode-toggle');
-        const githubSheet = document.getElementById('themeGithub');
-        const nightSheet = document.getElementById('themeNight');
+        const lightSheet = document.getElementById('themeLight');
+        const darkSheet = document.getElementById('themeDark');
 
-        const saved = localStorage.getItem('theme') || 'github';
-        if (saved === 'night') {
-            githubSheet.media = 'not all';
-            nightSheet.media = 'all';
+        const saved = localStorage.getItem('theme') || 'light';
+        if (saved === 'dark') {
+            lightSheet.media = 'not all';
+            darkSheet.media = 'all';
             themeToggle.textContent = '🌙';
         }
 
         themeToggle.addEventListener('click', () => {
-            const isNight = nightSheet.media === 'all';
-            githubSheet.media = isNight ? 'all' : 'not all';
-            nightSheet.media = isNight ? 'not all' : 'all';
-            themeToggle.textContent = isNight ? '☀️' : '🌙';
-            localStorage.setItem('theme', isNight ? 'github' : 'night');
+            const isDark = darkSheet.media === 'all';
+            lightSheet.media = isDark ? 'all' : 'not all';
+            darkSheet.media = isDark ? 'not all' : 'all';
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
         });
     </script>
 </body>

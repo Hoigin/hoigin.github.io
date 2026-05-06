@@ -84,7 +84,7 @@ function scanPosts(): Array<{ title: string; date: string; dateDir: string; link
 
 /**
  * 生成文章列表 HTML 片段。
- * 格式：简单的 <a> 链接列表，标题后附日期。
+ * 格式：<a> 标签内标题左、日期右，日期用灰色小字。
  */
 function generateListHTML(posts: Array<{ title: string; date: string; link: string }>, indent: string): string {
     if (posts.length === 0) {
@@ -92,7 +92,12 @@ function generateListHTML(posts: Array<{ title: string; date: string; link: stri
     }
 
     return posts
-        .map(post => `${indent}<a href="${post.link}">${post.title}（${post.date}）</a>`)
+        .map(post =>
+            `${indent}<a class="post-item" href="${post.link}">` +
+            `\n${indent}    <span class="post-title">${post.title}</span>` +
+            `\n${indent}    <span class="post-date">${post.date}</span>` +
+            `\n${indent}</a>`
+        )
         .join('\n');
 }
 

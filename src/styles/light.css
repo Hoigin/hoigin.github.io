@@ -1,0 +1,15 @@
+:root {
+    --page-bg: #ffffff;
+    --page-text: #333333;
+    --card-bg: #ffffff;
+    --card-border: #e0e0e0;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    --title-color: #333333;
+    --link-color: #000000;
+    --link-hover: #e74c3c;
+    --border-color: #e0e0e0;
+    --muted-color: #999999;
+    --state-color: #888888;
+    --avatar-border: #eeeeee;
+    --toggle-color: #888888;
+}
