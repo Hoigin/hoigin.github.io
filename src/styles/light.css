@@ -2,15 +2,15 @@
     --page-bg: #ffffff;
     --page-text: #333333;
     --card-bg: #ffffff;
-    --card-border: #e0e0e0;
-    --card-shadow: rgba(0, 0, 0, 0.08);
+    --card-border: #c9b99a;
+    --card-shadow: rgba(80, 60, 30, 0.08);
     --title-color: #333333;
     --link-color: #000000;
     --title-link-hover: #e74c3c;
     --icon-link-hover: #2c3e50;
-    --border-color: #e0e0e0;
+    --border-color: #c9b99a;
     --muted-color: #999999;
     --state-color: #888888;
-    --avatar-border: #eeeeee;
+    --avatar-border: #bfaa80;
     --toggle-color: #888888;
 }

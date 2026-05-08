@@ -103,6 +103,7 @@ function generateListHTML(posts: Array<{ title: string; date: string; link: stri
     return posts
         .map(post =>
             `${indent}<a class="post-item" href="${post.link}">` +
+            `\n${indent}    <span class="post-icon">📄</span>` +
             `\n${indent}    <span class="post-title">${post.title}</span>` +
             `\n${indent}    <span class="post-date">${post.date}</span>` +
             `\n${indent}</a>`
