@@ -1,10 +1,8 @@
 /**
  * build_index.ts — 博客文章列表构建脚本
  *
- * 功能：扫描 ./posts/ 下的日期子目录，从每个 .html 文件中提取标题，
- *       生成 HTML 列表片段替换 index_template.html 中的 {{POST_LIST}}，
- *       输出最终的 index.html。
- *       一个目录下可以有任意名称的 .html 文件，每个文件对应一篇文章。
+ * 功能：读取 posts.json 中的文章列表，生成 HTML 列表片段替换
+ *       index_template.html 中的 {{POST_LIST}}，输出最终的 index.html。
  *
  * 运行方式：npx tsx src/build_index.ts
  */
@@ -17,78 +15,59 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const POSTS_DIR = path.join(ROOT_DIR, 'posts');
 const TEMPLATE_FILE = path.join(ROOT_DIR, 'index_template.html');
 const OUTPUT_FILE = path.join(ROOT_DIR, 'index.html');
 
-/**
- * 从 HTML 文件中提取文章标题。
- * 依次尝试 <title> 和 <h1>，若均不存在则用文件名作为占位。
- */
-function extractTitle(htmlContent: string, fallbackName: string): string {
-    const titleMatch = htmlContent.match(/<title>(.*?)<\/title>/i);
-    if (titleMatch && titleMatch[1].trim()) {
-        return titleMatch[1].trim();
-    }
-    const h1Match = htmlContent.match(/<h1[^>]*>(.*?)<\/h1>/i);
-    if (h1Match && h1Match[1].trim()) {
-        return h1Match[1].trim();
-    }
-    return fallbackName;
+interface PostEntry {
+    title: string;
+    date: string;
+    file: string;
+    github?: string;
+    tags?: string[];
 }
 
 /**
- * 将日期目录名格式化为可读日期，如 "20260506" → "2026-05-06"。
+ * 读取 posts.json 并解析为文章列表。
  */
-function formatDate(dirName: string): string {
-    if (dirName.length === 8 && /^\d{8}$/.test(dirName)) {
-        return `${dirName.slice(0, 4)}-${dirName.slice(4, 6)}-${dirName.slice(6, 8)}`;
+function loadPosts(): PostEntry[] {
+    const postsFile = path.join(ROOT_DIR, 'posts.json');
+    if (!fs.existsSync(postsFile)) {
+        console.error('posts.json 不存在，无法构建。');
+        process.exit(1);
     }
-    return dirName;
+    const raw = fs.readFileSync(postsFile, 'utf-8');
+    try {
+        return JSON.parse(raw) as PostEntry[];
+    } catch (e) {
+        console.error('posts.json 格式错误：', e);
+        process.exit(1);
+    }
 }
 
 /**
- * 扫描 posts 目录，按日期倒序收集文章信息。
- * 每个日期子目录下的所有 .html 文件都会被收录。
+ * 校验文章列表的必填字段和引用文件是否存在。
+ * 仅输出警告，不终止构建（允许草稿条目）。
  */
-function scanPosts(): Array<{ title: string; date: string; dateDir: string; link: string }> {
-    if (!fs.existsSync(POSTS_DIR)) {
-        console.warn('posts 目录不存在，跳过文章列表生成。');
-        return [];
-    }
-
-    const posts: Array<{ title: string; date: string; dateDir: string; link: string }> = [];
-
-    for (const entry of fs.readdirSync(POSTS_DIR)) {
-        const entryPath = path.join(POSTS_DIR, entry);
-        if (!fs.statSync(entryPath).isDirectory()) continue;
-
-        for (const file of fs.readdirSync(entryPath)) {
-            if (!file.endsWith('.html')) continue;
-            // 跳过 .assets 等辅助目录中可能误识别的文件
-            const filePath = path.join(entryPath, file);
-            if (!fs.statSync(filePath).isFile()) continue;
-
-            const title = extractTitle(fs.readFileSync(filePath, 'utf-8'), file.replace('.html', ''));
-            const relativeLink = path.join('posts', entry, file).split(path.sep).join('/');
-
-            posts.push({
-                title,
-                date: formatDate(entry),
-                dateDir: entry,
-                link: `./${relativeLink}`,
-            });
+function validatePosts(posts: PostEntry[]): void {
+    for (const post of posts) {
+        if (!post.title) {
+            console.warn(`posts.json: 缺少 title 字段 — ${JSON.stringify(post)}`);
+        }
+        if (!post.date) {
+            console.warn(`posts.json: 缺少 date 字段 — ${JSON.stringify(post)}`);
+        }
+        if (post.date && !/^\d{4}-\d{2}-\d{2}$/.test(post.date)) {
+            console.warn(`posts.json: date 格式应为 YYYY-MM-DD — "${post.date}" (file: ${post.file})`);
+        }
+        if (!post.file) {
+            console.warn(`posts.json: 缺少 file 字段 — ${JSON.stringify(post)}`);
+            continue;
+        }
+        const filePath = path.join(ROOT_DIR, post.file);
+        if (!fs.existsSync(filePath)) {
+            console.warn(`posts.json: 引用的文件不存在 — ${post.file}`);
         }
     }
-
-    // 按日期倒序排列，同一天的多篇文章按文件名排序
-    posts.sort((a, b) => {
-        const dateCompare = b.dateDir.localeCompare(a.dateDir);
-        if (dateCompare !== 0) return dateCompare;
-        return a.link.localeCompare(b.link);
-    });
-
-    return posts;
 }
 
 /**
@@ -129,11 +108,20 @@ function build(): void {
         process.exit(1);
     }
 
-    const posts = scanPosts();
+    const posts = loadPosts();
+    validatePosts(posts);
+
+    posts.sort((a, b) => b.date.localeCompare(a.date));
+
+    const postsForHTML = posts.map(post => ({
+        title: post.title,
+        date: post.date,
+        link: `./${post.file}`,
+    }));
+
     const templateContent = fs.readFileSync(TEMPLATE_FILE, 'utf-8');
     const indent = getPlaceholderIndent(templateContent);
-    const listHTML = generateListHTML(posts, indent);
-    // 替换整行（包括前导缩进），从新行开始写入列表内容
+    const listHTML = generateListHTML(postsForHTML, indent);
     const outputContent = templateContent.replace(/^\s*{{POST_LIST}}/m, listHTML);
 
     fs.writeFileSync(OUTPUT_FILE, outputContent, 'utf-8');
