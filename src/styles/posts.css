@@ -82,3 +82,53 @@ img {
     display: block;
     margin: 0 auto;
 }
+
+/* ── 引用块 ──────────────────────────────────── */
+
+blockquote {
+    margin: 3em 0;
+    padding: 1em 1em;
+    border-left: 4px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+blockquote blockquote {
+    margin: 0.5em 0;
+}
+
+/* ── 提示容器（GitHub Alerts） ──────────────────── */
+
+.markdown-alert {
+    padding: 0 1em;
+    margin-bottom: 16px;
+    color: inherit;
+    border-left: 0.25em solid var(--alert-border);
+}
+
+.markdown-alert-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--alert-border);
+}
+
+.markdown-alert-title svg {
+    fill: currentColor;
+    flex-shrink: 0;
+    position: relative;
+    top: 0.125em;
+    margin-right: 1ch;
+    overflow: visible;
+}
+
+.markdown-alert-note       { --alert-border: var(--alert-note-border); }
+.markdown-alert-tip        { --alert-border: var(--alert-tip-border); }
+.markdown-alert-important  { --alert-border: var(--alert-important-border); }
+.markdown-alert-warning    { --alert-border: var(--alert-warning-border); }
+.markdown-alert-caution    { --alert-border: var(--alert-caution-border); }
+
+.markdown-alert .markdown-alert {
+    margin: 0.5em 0;
+}

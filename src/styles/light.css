@@ -21,4 +21,11 @@
     --post-code-lang-color: #666;
     --post-code-line-color: #999;
     --post-code-line-border: #ddd;
+
+    /* 提示容器 */
+    --alert-note-border: #0969da;    /* --alert-note-bg: #ddf4ff; */
+    --alert-tip-border: #1a7f37;     /* --alert-tip-bg: #dafbe1; */
+    --alert-important-border: #8250df; /* --alert-important-bg: #fbefff; */
+    --alert-warning-border: #9a6700;  /* --alert-warning-bg: #fff8c5; */
+    --alert-caution-border: #cf222e;  /* --alert-caution-bg: #ffebe9; */
 }
