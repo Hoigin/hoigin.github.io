@@ -179,13 +179,12 @@ export function renderMarkdown(filePath: string): string {
 
     const env: Record<string, any> = {};
     const htmlContent = md.render(mdContent, env);
-
-    // MathJax 生成的 CSS（字体声明、字符排版、辅助层隐藏等）
-    const mathjaxCss = env.mathjax_stylesheet
-        ? `\n    <style>${env.mathjax_stylesheet}</style>`
-        : '';
-
     const formattedContent = formatHtml(htmlContent);
+
+    // 提取 MathJax 构建时生成的 CSS 样式表（隐藏 assistive-mml 等）
+    // 缩进与 <style> 标签对齐（8 格 = 2 层缩进）
+    const mathjaxCss = (env.mathjax_stylesheet || '')
+        .split('\n').map((line: string) => line.trim() ? '        ' + line : '').join('\n');
 
     const template = fs.readFileSync(path.join(ROOT_DIR, 'post_template.html'), 'utf-8');
     const fullHtml = template
