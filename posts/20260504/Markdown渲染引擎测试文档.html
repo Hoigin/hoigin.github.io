@@ -1197,6 +1197,9 @@
 
     </style>
 
+    <!-- 文章通用样式（始终生效） -->
+    <link rel="stylesheet" href="../../src/styles/posts.css">
+
     <!-- highlight.js 主题：浅色 / 深色，与博客主题同步切换 -->
     <link rel="stylesheet" id="hljsLight" href="../../src/styles/code-highlight-light.css" media="not all">
     <link rel="stylesheet" id="hljsDark" href="../../src/styles/code-highlight-dark.css" media="all">
@@ -1656,7 +1659,8 @@
     <ol>
         <li>有序列表项
             <ul>
-                <li>无序子项
+                <li>
+                    <p>无序子项</p>
                     <ol>
                         <li>嵌套有序子项
                             <ul>
@@ -1673,10 +1677,37 @@
                             </ul>
                         </li>
                     </ol>
+                    <blockquote>
+                        <p>[!important]</p>
+                    </blockquote>
                 </li>
             </ul>
         </li>
     </ol>
+    <blockquote>
+        <blockquote>
+            <p>[!caution]</p>
+            <blockquote>
+                <p>[!tip]</p>
+                <blockquote>
+                    <p>[!note]</p>
+                    <blockquote>
+                        <p>[!warning]</p>
+                        <div class="post-code-block">
+                            <span class="post-code-lang">bash</span>
+                            <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                                <pre class="post-code-line-numbers" data-indent="9">1</pre>
+                                    <pre><code class="hljs"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;Hello&quot;</span></code></pre>
+                            </div>
+                        </div>
+                        <blockquote>
+                            <p>这是一段引用</p>
+                        </blockquote>
+                    </blockquote>
+                </blockquote>
+            </blockquote>
+        </blockquote>
+    </blockquote>
     <p><strong>测试完成！</strong></p>
     <p>此文档包含了Markdown渲染引擎需要测试的所有基本和高级功能，可用于验证渲染效果的完整性和正确性。</p>
 </body>
