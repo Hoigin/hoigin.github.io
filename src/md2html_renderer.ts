@@ -57,7 +57,7 @@ md.renderer.rules.fence = (tokens, idx) => {
     }
     const lineNumbers = lines.map((_, i) => i + 1).join('\n');
 
-    // 行号列宽度：数字宽度 + padding(1em) + 小margin(0.2em)
+    // 行号列宽度：数字宽度 + padding(1em)
     // 数字实际占 digits × 0.6em（等宽字体每字约0.6em宽）
     const digits = String(lines.length).length;
     const linenoWidth = Math.round((digits * 0.6 + 1.0) * 100) / 100;
