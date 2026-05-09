@@ -13,4 +13,79 @@
     --state-color: #888888;
     --avatar-border: #bfaa80;
     --toggle-color: #888888;
+
+    /* 代码块 */
+    --post-code-bg: #f8f8f8;
+    --post-code-border: #ddd;
+    --post-code-lang-bg: #eee;
+    --post-code-lang-color: #666;
+    --post-code-line-color: #999;
+    --post-code-line-border: #ddd;
+}
+
+body {
+    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+    background: var(--page-bg);
+    color: var(--page-text);
+}
+
+/* ── 代码块容器 ─────────────────────────────── */
+
+.post-code-block {
+    background: var(--post-code-bg);
+    border: 2px solid var(--post-code-border);
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+/* ── 语言标签 ───────────────────────────────── */
+
+.post-code-lang {
+    display: block;
+    padding: 4px 12px;
+    font-size: 0.8em;
+    color: var(--post-code-lang-color);
+    background: var(--post-code-lang-bg);
+    border-bottom: 1px solid var(--post-code-border);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* ── 双列布局：行号 + 代码 ─────────────────── */
+
+.post-code-content {
+    display: grid;
+    overflow-x: auto;
+}
+
+.post-code-line-numbers {
+    box-sizing: border-box;
+    overflow: hidden;
+    text-align: right;
+    padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+    border-right: 1px solid var(--post-code-line-border);
+    color: var(--post-code-line-color);
+    user-select: none;
+    line-height: 1.6;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.post-code-content pre {
+    margin: 0;
+    padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.post-code-content pre code.hljs {
+    background: transparent;
+    padding: 0;
+    display: inline;
+    overflow-x: visible;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
 }

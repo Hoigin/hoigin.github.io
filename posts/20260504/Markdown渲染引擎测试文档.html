@@ -1,490 +1,524 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Markdown渲染引擎测试文档</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown渲染引擎测试文档</title>
 
-.typora-content {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 40px 60px;
-  color: #333;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.8;
-  -webkit-font-smoothing: antialiased;
-}
+    <!-- highlight.js 主题：浅色 / 深色，与博客主题同步切换 -->
+    <link rel="stylesheet" id="hljsLight" href="../../node_modules/highlight.js/styles/github.css" media="not all">
+    <link rel="stylesheet" id="hljsDark" href="../../node_modules/highlight.js/styles/github-dark.css" media="all">
 
-.typora-content h1 {
-  font-size: 2em; font-weight: 700; margin: 2em 0 1em;
-  padding-bottom: 0.3em; border-bottom: 2px solid #eaecef; color: #1a1a1a;
-}
-.typora-content h2 {
-  font-size: 1.5em; font-weight: 600; margin: 1.5em 0 0.8em;
-  padding-bottom: 0.2em; border-bottom: 1px solid #eaecef; color: #2c2c2c;
-}
-.typora-content h3 { font-size: 1.25em; font-weight: 600; margin: 1.2em 0 0.6em; color: #3c3c3c; }
-.typora-content h4 { font-size: 1.1em; font-weight: 600; margin: 1em 0 0.5em; color: #444; }
-.typora-content h5 { font-size: 1em; font-weight: 600; margin: 0.8em 0 0.4em; }
-.typora-content h6 { font-size: 0.9em; font-weight: 600; margin: 0.7em 0 0.3em; color: #666; }
-
-.typora-content p { margin: 0 0 1em; }
-.typora-content strong { font-weight: 700; color: #1a1a1a; }
-.typora-content em { font-style: italic; }
-.typora-content mark { background: #fff3cd; padding: 2px 4px; border-radius: 2px; }
-.typora-content del { color: #999; text-decoration: line-through; }
-.typora-content u { text-decoration: underline; text-underline-offset: 2px; }
-
-.typora-content a {
-  color: #4183c4; text-decoration: none;
-  border-bottom: 1px solid transparent; transition: border-color 0.2s;
-}
-.typora-content a:hover { border-bottom-color: #4183c4; }
-
-.typora-content img { max-width: 100%; border-radius: 4px; margin: 0.5em 0; }
-
-.typora-content code {
-  background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 3px;
-  padding: 2px 6px; font-size: 0.9em;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-  color: #e83e8c;
-}
-.typora-content .code-block {
-  background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 4px;
-  margin: 1em 0; overflow-x: auto;
-}
-.typora-content .code-block .code-lang {
-  display: block; padding: 4px 12px; font-size: 0.8em; color: #666;
-  background: #f0f0f0; border-bottom: 1px solid #e0e0e0;
-  text-transform: uppercase; letter-spacing: 0.5px;
-}
-.typora-content .code-block pre { margin: 0; padding: 16px; background: transparent; }
-.typora-content .code-block code {
-  background: transparent; border: none; padding: 0;
-  color: #333; font-size: 0.9em; line-height: 1.6;
-}
-
-.typora-content .math-block { text-align: center; margin: 1.5em 0; overflow-x: auto; }
-.typora-content .math-inline { }
-
-.typora-content blockquote {
-  border-left: 4px solid #dfe2e5; padding: 0.5em 1em;
-  margin: 1em 0; color: #666; background: #f9f9f9;
-  border-radius: 0 4px 4px 0;
-}
-.typora-content blockquote blockquote { margin: 0.5em 0; border-left-color: #ccc; }
-
-.typora-content ul, .typora-content ol { margin: 0.5em 0 1em; padding-left: 2em; }
-.typora-content li { margin: 0.25em 0; }
-.typora-content li > ul, .typora-content li > ol { margin: 0.2em 0; }
-.typora-content .task-list { list-style: none; padding-left: 0; }
-.typora-content .task-list li input[type="checkbox"] {
-  margin-right: 6px; vertical-align: middle; accent-color: #4183c4;
-}
-
-.typora-content table {
-  width: 100%; border-collapse: collapse; margin: 1em 0;
-  font-size: 0.95em; overflow-x: auto; display: block;
-}
-.typora-content th, .typora-content td { border: 1px solid #dfe2e5; padding: 8px 12px; }
-.typora-content th { background: #f6f8fa; font-weight: 600; color: #1a1a1a; }
-.typora-content tr:nth-child(even) { background: #f9f9f9; }
-.typora-content tr:hover { background: #f0f4f8; }
-
-.typora-content hr {
-  border: none; height: 2px;
-  background: linear-gradient(to right, transparent, #d0d0d0, transparent);
-  margin: 2em 0;
-}
-
-.typora-content dt { font-weight: 700; margin-top: 0.8em; }
-.typora-content dd { margin-left: 1.5em; color: #555; margin-bottom: 0.3em; }
-
-.typora-content .footnotes { font-size: 0.85em; color: #666; margin-top: 2em; }
-.typora-content .footnote-ref a { color: #4183c4; text-decoration: none; }
-.typora-content .footnote-backref { color: #4183c4; font-size: 0.8em; }
-
-.typora-content .mermaid { margin: 1em 0; text-align: center; }
-
-@media (max-width: 768px) { .typora-content { padding: 20px 24px; }
-
-</style>
+    <!-- 博客主题：浅色 / 深色 -->
+    <link rel="stylesheet" id="themeLight" href="../../src/styles/light.css" media="not all">
+    <link rel="stylesheet" id="themeDark" href="../../src/styles/dark.css" media="all">
 </head>
 <body>
-<div class="typora-content">
-<h1>Markdown渲染引擎测试文档</h1>
-<h2>一、数学公式</h2>
-<p><strong>行内公式：</strong> <span class="math-inline">E=mc^2</span> 和 <span class="math-inline">\alpha + \beta = \gamma</span></p>
-<p><strong>块级公式：</strong></p>
-<div class="math-block">\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}</div>
-<div class="math-block">\begin{aligned}
-a &amp;= b + c \\
-d &amp;= e \times f \\
-g &amp;= \frac{h}{i}
-\end{aligned}</div>
-<h2>二、代码块</h2>
-<p><strong>Python代码：</strong></p>
-<div class="code-block"><pre><code>def quicksort(arr):
-    if len(arr) &lt;= 1:
-        return arr
-    pivot = arr[len(arr) // 2]
-    left = [x for x in arr if x &lt; pivot]
-    middle = [x for x in arr if x == pivot]
-    right = [x for x in arr if x &gt; pivot]
-    return quicksort(left) + middle + quicksort(right)
-
-print(quicksort([3,6,8,10,1,2,1]))</code></pre></div>
-<p><strong>JavaScript代码：</strong></p>
-<div class="code-block"><pre><code>class Person {
-    constructor(name, age) {
-        this.name = name;
-        this.age = age;
-    }
-    
-    greet() {
-        return `Hello, my name is ${this.name} and I am ${this.age} years old.`;
-    }
-}
-
-const person = new Person('Alice', 25);
-console.log(person.greet());</code></pre></div>
-<p><strong>JSON数据：</strong></p>
-<div class="code-block"><pre><code>{
-  &quot;users&quot;: [
-    {
-      &quot;id&quot;: 1,
-      &quot;name&quot;: &quot;John Doe&quot;,
-      &quot;email&quot;: &quot;john@example.com&quot;,
-      &quot;active&quot;: true
-    },
-    {
-      &quot;id&quot;: 2,
-      &quot;name&quot;: &quot;Jane Smith&quot;,
-      &quot;email&quot;: &quot;jane@example.com&quot;,
-      &quot;active&quot;: false
-    }
-  ],
-  &quot;total&quot;: 2
-}</code></pre></div>
-<h2>三、文本格式</h2>
-<p><strong>斜体：</strong> <em>这是斜体文本</em></p>
-<p><strong>粗体：</strong> <strong>这是粗体文本</strong></p>
-<p><strong>粗斜体：</strong> <strong><em>这是粗斜体文本</em></strong></p>
-<p><strong>删除线：</strong> <del>这是删除线文本</del></p>
-<p><strong>高亮：</strong> <mark>这是高亮文本</mark></p>
-<p><strong>下划线：</strong> 这是下划线文本</p>
-<h2>四、链接和图片</h2>
-<p><strong>外部链接：</strong> <a href="[https://google.com](https://google.com/">Google</a>)</p>
-<p><strong>图片：</strong></p>
-<img src="Markdown渲染引擎测试文档.assets/diagram.png" alt="img" style="zoom:50%;" />
-<h2>五、引用</h2>
-<p><strong>普通引用：</strong></p>
-<p>这是一个普通的引用块
-可以包含多行文本</p>
-<p><strong>嵌套引用：</strong></p>
-<p>这是外层引用</p>
-<h2>六、列表</h2>
-<p><strong>无序列表：</strong></p>
-<ul>
-<li>一级项目
-<ul>
-<li>二级项目
-<ul>
-<li>三级项目
-<ul>
-<li>四级项目
-<ul>
-<li>五级项目
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p><strong>有序列表：</strong></p>
-<ol>
-<li>第一项
-<ol>
-<li>子项一
-<ol>
-<li>子子项一
-</li>
-</ol>
-</li>
-<li>子项二
-</li>
-</ol>
-</li>
-<li>第二项
-<ul>
-<li>子项（混合列表）
-</li>
-<li>另一个子项
-</li>
-</ul>
-</li>
-</ol>
-<p><strong>任务列表：</strong></p>
-<ul>
-<li>已完成的任务
-</li>
-<li>未完成的任务
-</li>
-<li>待处理的任务
-</li>
-</ul>
-<h2>七、表格</h2>
-<table>
-<thead>
-<tr>
-<th>序号</th>
-<th>姓名</th>
-<th>年龄</th>
-<th>城市</th>
-<th>状态</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>张三</td>
-<td>25</td>
-<td>北京</td>
-<td>✅</td>
-</tr>
-<tr>
-<td>2</td>
-<td>李四</td>
-<td>30</td>
-<td>上海</td>
-<td>✅</td>
-</tr>
-<tr>
-<td>3</td>
-<td>王五</td>
-<td>28</td>
-<td>广州</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>4</td>
-<td>赵六</td>
-<td>35</td>
-<td>深圳</td>
-<td>✅</td>
-</tr>
-</tbody>
-</table>
-<p><strong>对齐方式测试：</strong></p>
-<table>
-<thead>
-<tr>
-<th>左对齐</th>
-<th>右对齐</th>
-<th>居中对齐</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>左对齐文本</td>
-<td>右对齐文本</td>
-<td>居中文本</td>
-</tr>
-<tr>
-<td>多行测试第二行</td>
-<td>多行测试第二行</td>
-<td>多行测试第二行</td>
-</tr>
-</tbody>
-</table>
-<h2>八、分割线</h2>
-<hr>
-<hr>
-<hr>
-<h2>九、脚注</h2>
-<p>这是一个包含脚注的句子，这里也有一个。</p>
-<h2>十、Mermaid流程图</h2>
-<div class="mermaid">flowchart TD
-    A[开始] --&gt; B{用户登录?}
-    B -- 是 --&gt; C[进入系统]
-    B -- 否 --&gt; D[登录页面]
-    D --&gt; E[输入用户名密码]
-    E --&gt; F{验证成功?}
-    F -- 是 --&gt; C
-    F -- 否 --&gt; G[显示错误信息]
-    G --&gt; D
-    
-    C --&gt; H[选择功能]
-    H --&gt; I{选择操作}
-    I -- 查询 --&gt; J[显示查询结果]
-    I -- 添加 --&gt; K[添加新记录]
-    I -- 修改 --&gt; L[修改现有记录]
-    I -- 删除 --&gt; M[删除记录]
-    
-    J --&gt; N[结束]
-    K --&gt; N
-    L --&gt; N
-    M --&gt; N</div>
-<div class="mermaid">flowchart LR
-    subgraph 用户模块
-        A[用户注册] --&gt; B[用户登录]
-        B --&gt; C[用户信息管理]
-    end
-    
-    subgraph 订单模块
-        D[创建订单] --&gt; E[支付订单]
-        E --&gt; F{支付成功?}
-        F -- 是 --&gt; G[订单完成]
-        F -- 否 --&gt; H[订单失败]
-    end
-    
-    C --&gt; D
-    G --&gt; I[评价订单]
-    H --&gt; J[重新支付]</div>
-<h2>十一、复杂嵌套结构</h2>
-<p><strong>列表中的代码块：</strong></p>
-<ol>
-<li>第一步骤
-<div class="code-block"><span class="code-lang">bash</span><pre><code class="language-bash"># 安装依赖
-npm install</code></pre></div>
-</li>
-<li>第二步骤
-<div class="code-block"><span class="code-lang">typescript</span><pre><code class="language-typescript">// 配置文件
-const config = {
-    port: 3000,
-    host: 'localhost'
-};</code></pre></div>
-</li>
-</ol>
-<p><strong>列表中的引用：</strong></p>
-<ul>
-<li>项目一
-</li>
-</ul>
-<p>这是一个嵌套引用
-包含多行文本</p>
-<ul>
-<li>项目二
-</li>
-</ul>
-<p>另一个引用块
-可以包含<strong>格式化</strong>文本</p>
-<p><strong>列表中的表格：</strong></p>
-<ol>
-<li>数据分析步骤
-<table>
-<thead>
-<tr>
-<th>阶段</th>
-<th>描述</th>
-<th>状态</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>数据收集</td>
-<td>✅</td>
-</tr>
-<tr>
-<td>2</td>
-<td>数据清洗</td>
-<td>✅</td>
-</tr>
-<tr>
-<td>3</td>
-<td>数据分析</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>4</td>
-<td>结果报告</td>
-<td>❌</td>
-</tr>
-</tbody>
-</table>
-</li>
-</ol>
-<h2>十二、特殊字符</h2>
-<p><strong>转义字符：</strong>
-<em>这不是斜体</em>
-<strong>这不是粗体</strong></p>
-<p><strong>HTML实体：</strong>
-© 版权符号
-® 注册商标
-™ 商标
-° 度符号</p>
-<p><strong>Unicode字符：</strong>
-❤️ 🌟 🚀 🎉 📊</p>
-<h2>十三、定义列表</h2>
-<p><strong>术语定义：</strong></p>
-<dl>
-<dt>Markdown</dt>
-<dd>一种轻量级标记语言</dd>
-<dd>用于格式化文本</dd>
-</dl>
-<dl>
-<dt>渲染引擎</dt>
-<dd>将Markdown转换为HTML的工具</dd>
-<dd>需要支持各种Markdown扩展</dd>
-</dl>
-<h2>十四、多行文本测试</h2>
-<p><strong>长文本换行测试：</strong>
-这是一段非常长的文本，用于测试渲染引擎的换行功能。当文本长度超过容器宽度时，应该能够自动换行显示，而不是溢出容器。这是对渲染引擎文本处理能力的基本测试。</p>
-<p><strong>代码块换行测试：</strong></p>
-<div class="code-block"><span class="code-lang">python</span><pre><code class="language-python">def complex_function_with_long_name(parameter1, parameter2, parameter3, 
-                                   parameter4, parameter5, parameter6):
-    # 这是一个包含长行的函数定义
-    # 用于测试代码块的换行显示
-    result = (parameter1 + parameter2 + parameter3 + 
-              parameter4 + parameter5 + parameter6)
-    return result</code></pre></div>
-<h2>十五、综合测试</h2>
-<p><strong>综合格式测试：</strong>
-这是一个包含多种格式的综合测试句子：<em>斜体</em>、<strong>粗体</strong>、<mark>高亮</mark>、<del>删除线</del>、下划线，以及<span class="math-inline">数学公式</span>。</p>
-<p><strong>综合列表测试：</strong></p>
-<ol>
-<li>有序列表项
-<ul>
-<li>无序子项
-<ol>
-<li>嵌套有序子项
-<ul>
-<li>多层嵌套项
-<div class="code-block"><span class="code-lang">python</span><pre><code class="language-python">              # 嵌套代码
-              print(&quot;Hello World&quot;)</code></pre></div>
-</li>
-</ul>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-</ol>
-<p><strong>测试完成！</strong></p>
-<p>此文档包含了Markdown渲染引擎需要测试的所有基本和高级功能，可用于验证渲染效果的完整性和正确性。</p>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  renderMathInElement(document.body, {
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$', right: '$', display: false}
-    ],
-    throwOnError: false
-  });
-  mermaid.initialize({ startOnLoad: true, theme: 'default' });
-});
-</script>
+    <h1>Markdown渲染引擎测试文档</h1>
+    <h2>一、数学公式</h2>
+    <p><strong>行内公式：</strong> $E=mc^2$ 和 $\alpha + \beta = \gamma$</p>
+    <p><strong>块级公式：</strong></p>
+    <p>$
+        \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+        $</p>
+    <p>$
+        \begin{aligned}
+        a &amp;= b + c \
+        d &amp;= e \times f \
+        g &amp;= \frac{h}{i}
+        \end{aligned}
+        $</p>
+    <h2>二、代码块</h2>
+    <p><strong>Python代码：</strong></p>
+    <div class="post-code-block">
+        <span class="post-code-lang">python</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-keyword">def</span> <span class="hljs-title function_">quicksort</span>(<span class="hljs-params">arr</span>):
+                    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(arr) &lt;= <span class="hljs-number">1</span>:
+                        <span class="hljs-keyword">return</span> arr
+                    pivot = arr[<span class="hljs-built_in">len</span>(arr) // <span class="hljs-number">2</span>]
+                    left = [x <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> arr <span class="hljs-keyword">if</span> x &lt; pivot]
+                    middle = [x <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> arr <span class="hljs-keyword">if</span> x == pivot]
+                    right = [x <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> arr <span class="hljs-keyword">if</span> x &gt; pivot]
+                    <span class="hljs-keyword">return</span> quicksort(left) + middle + quicksort(right)
+                
+                <span class="hljs-built_in">print</span>(quicksort([<span class="hljs-number">3</span>,<span class="hljs-number">6</span>,<span class="hljs-number">8</span>,<span class="hljs-number">10</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]))</code></pre>
+        </div>
+    </div>
+    <p><strong>JavaScript代码：</strong></p>
+    <div class="post-code-block">
+        <span class="post-code-lang">javascript</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Person</span> {
+                    <span class="hljs-title function_">constructor</span>(<span class="hljs-params">name, age</span>) {
+                        <span class="hljs-variable language_">this</span>.<span class="hljs-property">name</span> = name;
+                        <span class="hljs-variable language_">this</span>.<span class="hljs-property">age</span> = age;
+                    }
+                    
+                    <span class="hljs-title function_">greet</span>(<span class="hljs-params"></span>) {
+                        <span class="hljs-keyword">return</span> <span class="hljs-string">`Hello, my name is <span class="hljs-subst">${<span class="hljs-variable language_">this</span>.name}</span> and I am <span class="hljs-subst">${<span class="hljs-variable language_">this</span>.age}</span> years old.`</span>;
+                    }
+                }
+                
+                <span class="hljs-keyword">const</span> person = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Person</span>(<span class="hljs-string">&#x27;Alice&#x27;</span>, <span class="hljs-number">25</span>);
+                <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(person.<span class="hljs-title function_">greet</span>());</code></pre>
+        </div>
+    </div>
+    <p><strong>JSON数据：</strong></p>
+    <div class="post-code-block">
+        <span class="post-code-lang">json</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13
+                14
+                15
+                16
+                17</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-punctuation">{</span>
+                  <span class="hljs-attr">&quot;users&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;John Doe&quot;</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;email&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;john@example.com&quot;</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;active&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+                    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+                    <span class="hljs-punctuation">{</span>
+                      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">2</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Jane Smith&quot;</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;email&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;jane@example.com&quot;</span><span class="hljs-punctuation">,</span>
+                      <span class="hljs-attr">&quot;active&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
+                    <span class="hljs-punctuation">}</span>
+                  <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+                  <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">2</span>
+                <span class="hljs-punctuation">}</span></code></pre>
+        </div>
+    </div>
+    <h2>三、文本格式</h2>
+    <p><strong>斜体：</strong> <em>这是斜体文本</em></p>
+    <p><strong>粗体：</strong> <strong>这是粗体文本</strong></p>
+    <p><strong>粗斜体：</strong> <em><strong>这是粗斜体文本</strong></em></p>
+    <p><strong>删除线：</strong> <s>这是删除线文本</s></p>
+    <p><strong>高亮：</strong> ==这是高亮文本==</p>
+    <p><strong>下划线：</strong> 这是下划线文本</p>
+    <h2>四、链接和图片</h2>
+    <p><strong>外部链接：</strong> <a href="%5Bhttps://google.com%5D(https://google.com/)">Google</a></p>
+    <p><strong>图片：</strong></p>
+    <img src="Markdown渲染引擎测试文档.assets/diagram.png" alt="img" style="zoom:50%;" />
+    <h2>五、引用</h2>
+    <p><strong>普通引用：</strong></p>
+    <p>这是一个普通的引用块
+        可以包含多行文本</p>
+    <p><strong>嵌套引用：</strong></p>
+    <p>这是外层引用</p>
+    <h2>六、列表</h2>
+    <p><strong>无序列表：</strong></p>
+    <ul>
+        <li>一级项目
+            <ul>
+                <li>二级项目
+                    <ul>
+                        <li>三级项目
+                            <ul>
+                                <li>四级项目
+                                    <ul>
+                                        <li>五级项目</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <p><strong>有序列表：</strong></p>
+    <ol>
+        <li>第一项
+            <ol>
+                <li>子项一
+                    <ol>
+                        <li>子子项一</li>
+                    </ol>
+                </li>
+                <li>子项二</li>
+            </ol>
+        </li>
+        <li>第二项
+            <ul>
+                <li>子项（混合列表）</li>
+                <li>另一个子项</li>
+            </ul>
+        </li>
+    </ol>
+    <p><strong>任务列表：</strong></p>
+    <ul>
+        <li>已完成的任务</li>
+        <li>未完成的任务</li>
+        <li>待处理的任务</li>
+    </ul>
+    <h2>七、表格</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>姓名</th>
+                <th>年龄</th>
+                <th>城市</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>张三</td>
+                <td>25</td>
+                <td>北京</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>李四</td>
+                <td>30</td>
+                <td>上海</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>王五</td>
+                <td>28</td>
+                <td>广州</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>赵六</td>
+                <td>35</td>
+                <td>深圳</td>
+                <td>✅</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><strong>对齐方式测试：</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>左对齐</th>
+                <th>右对齐</th>
+                <th>居中对齐</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>左对齐文本</td>
+                <td>右对齐文本</td>
+                <td>居中文本</td>
+            </tr>
+            <tr>
+                <td>多行测试第二行</td>
+                <td>多行测试第二行</td>
+                <td>多行测试第二行</td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>八、分割线</h2>
+    <hr>
+    <hr>
+    <hr>
+    <h2>九、脚注</h2>
+    <p>这是一个包含脚注的句子，这里也有一个。</p>
+    <h2>十、Mermaid流程图</h2>
+    <div class="post-code-block">
+        <span class="post-code-lang">mermaid</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13
+                14
+                15
+                16
+                17
+                18
+                19
+                20
+                21</pre>
+            <pre data-indent="4"><code class="hljs">flowchart TD
+                    A[开始] --&gt; B{用户登录?}
+                    B -- 是 --&gt; C[进入系统]
+                    B -- 否 --&gt; D[登录页面]
+                    D --&gt; E[输入用户名密码]
+                    E --&gt; F{验证成功?}
+                    F -- 是 --&gt; C
+                    F -- 否 --&gt; G[显示错误信息]
+                    G --&gt; D
+                    
+                    C --&gt; H[选择功能]
+                    H --&gt; I{选择操作}
+                    I -- 查询 --&gt; J[显示查询结果]
+                    I -- 添加 --&gt; K[添加新记录]
+                    I -- 修改 --&gt; L[修改现有记录]
+                    I -- 删除 --&gt; M[删除记录]
+                    
+                    J --&gt; N[结束]
+                    K --&gt; N
+                    L --&gt; N
+                    M --&gt; N</code></pre>
+        </div>
+    </div>
+    <div class="post-code-block">
+        <span class="post-code-lang">mermaid</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13
+                14
+                15
+                16</pre>
+            <pre data-indent="4"><code class="hljs">flowchart LR
+                    subgraph 用户模块
+                        A[用户注册] --&gt; B[用户登录]
+                        B --&gt; C[用户信息管理]
+                    end
+                    
+                    subgraph 订单模块
+                        D[创建订单] --&gt; E[支付订单]
+                        E --&gt; F{支付成功?}
+                        F -- 是 --&gt; G[订单完成]
+                        F -- 否 --&gt; H[订单失败]
+                    end
+                    
+                    C --&gt; D
+                    G --&gt; I[评价订单]
+                    H --&gt; J[重新支付]</code></pre>
+        </div>
+    </div>
+    <h2>十一、复杂嵌套结构</h2>
+    <p><strong>列表中的代码块：</strong></p>
+    <ol>
+        <li>第一步骤</li>
+    </ol>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 安装依赖</span>
+                npm install</code></pre>
+        </div>
+    </div>
+    <ol start="2">
+        <li>第二步骤</li>
+    </ol>
+    <div class="post-code-block">
+        <span class="post-code-lang">typescript</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment">// 配置文件</span>
+                <span class="hljs-keyword">const</span> config = {
+                    <span class="hljs-attr">port</span>: <span class="hljs-number">3000</span>,
+                    <span class="hljs-attr">host</span>: <span class="hljs-string">&#x27;localhost&#x27;</span>
+                };</code></pre>
+        </div>
+    </div>
+    <p><strong>列表中的引用：</strong></p>
+    <ul>
+        <li>项目一</li>
+    </ul>
+    <p>这是一个嵌套引用
+        包含多行文本</p>
+    <ul>
+        <li>项目二</li>
+    </ul>
+    <p>另一个引用块
+        可以包含<strong>格式化</strong>文本</p>
+    <p><strong>列表中的表格：</strong></p>
+    <ol>
+        <li>数据分析步骤</li>
+    </ol>
+    <table>
+        <thead>
+            <tr>
+                <th>阶段</th>
+                <th>描述</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>数据收集</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>数据清洗</td>
+                <td>✅</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>数据分析</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>结果报告</td>
+                <td>❌</td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>十二、特殊字符</h2>
+    <p><strong>转义字符：</strong>
+        <em>这不是斜体</em>
+        <strong>这不是粗体</strong></p>
+    <p><strong>HTML实体：</strong>
+        © 版权符号
+        ® 注册商标
+        ™ 商标
+        ° 度符号</p>
+    <p><strong>Unicode字符：</strong>
+        ❤️ 🌟 🚀 🎉 📊</p>
+    <h2>十三、定义列表</h2>
+    <p><strong>术语定义：</strong>
+        Markdown
+        : 一种轻量级标记语言
+        : 用于格式化文本</p>
+    <p>渲染引擎
+        : 将Markdown转换为HTML的工具
+        : 需要支持各种Markdown扩展</p>
+    <h2>十四、多行文本测试</h2>
+    <p><strong>长文本换行测试：</strong>
+        这是一段非常长的文本，用于测试渲染引擎的换行功能。当文本长度超过容器宽度时，应该能够自动换行显示，而不是溢出容器。这是对渲染引擎文本处理能力的基本测试。</p>
+    <p><strong>代码块换行测试：</strong></p>
+    <div class="post-code-block">
+        <span class="post-code-lang">python</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-keyword">def</span> <span class="hljs-title function_">complex_function_with_long_name</span>(<span class="hljs-params">parameter1, parameter2, parameter3,
+                                                   parameter4, parameter5, parameter6</span>):
+                    <span class="hljs-comment"># 这是一个包含长行的函数定义</span>
+                    <span class="hljs-comment"># 用于测试代码块的换行显示</span>
+                    result = (parameter1 + parameter2 + parameter3 + 
+                              parameter4 + parameter5 + parameter6)
+                    <span class="hljs-keyword">return</span> result</code></pre>
+        </div>
+    </div>
+    <h2>十五、综合测试</h2>
+    <p><strong>综合格式测试：</strong>
+        这是一个包含多种格式的综合测试句子：<em>斜体</em>、<strong>粗体</strong>、==高亮==、<s>删除线</s>、下划线，以及$数学公式$。</p>
+    <p><strong>综合列表测试：</strong></p>
+    <ol>
+        <li>有序列表项
+            <ul>
+                <li>无序子项
+                    <ol>
+                        <li>嵌套有序子项
+                            <ul>
+                                <li>多层嵌套项<div class="post-code-block">
+                                        <span class="post-code-lang">python</span>
+                                        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                                            <pre class="post-code-line-numbers" data-indent="12">1
+                                                2</pre>
+                                            <pre data-indent="12"><code class="hljs"><span class="hljs-comment"># 嵌套代码</span>
+                                                <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Hello World&quot;</span>)</code></pre>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </li>
+            </ul>
+        </li>
+    </ol>
+    <p><strong>测试完成！</strong></p>
+    <p>此文档包含了Markdown渲染引擎需要测试的所有基本和高级功能，可用于验证渲染效果的完整性和正确性。</p>
 </body>
+<script>
+    // 主题切换逻辑（与主页一致，默认深色）
+    const lightSheet = document.getElementById('themeLight');
+    const darkSheet = document.getElementById('themeDark');
+    const hljsLight = document.getElementById('hljsLight');
+    const hljsDark = document.getElementById('hljsDark');
+
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+        lightSheet.media = 'all';
+        darkSheet.media = 'not all';
+        hljsLight.media = 'all';
+        hljsDark.media = 'not all';
+    }
+
+    // 剥离 <pre> 内容中的 HTML 源码缩进（data-indent 记录缩进层数，不影响渲染）
+    document.querySelectorAll('pre[data-indent]').forEach(pre => {
+        const spaces = parseInt(pre.dataset.indent) * 4;
+        const prefix = ' '.repeat(spaces);
+        pre.innerHTML = pre.innerHTML.split('\n').map(line => {
+            if (line.startsWith(prefix)) return line.slice(spaces);
+            return line;
+        }).join('\n');
+    });
+</script>
 </html>

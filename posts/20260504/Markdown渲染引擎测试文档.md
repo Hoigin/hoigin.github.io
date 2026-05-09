@@ -22,7 +22,7 @@ $$
 
 **Python代码：**
 
-```
+```python
 def quicksort(arr):
     if len(arr) <= 1:
         return arr
@@ -37,7 +37,7 @@ print(quicksort([3,6,8,10,1,2,1]))
 
 **JavaScript代码：**
 
-```
+```javascript
 class Person {
     constructor(name, age) {
         this.name = name;
@@ -55,7 +55,7 @@ console.log(person.greet());
 
 **JSON数据：**
 
-```
+```json
 {
   "users": [
     {
@@ -307,7 +307,6 @@ def complex_function_with_long_name(parameter1, parameter2, parameter3,
     - 无序子项
         1. 嵌套有序子项
             - 多层嵌套项
-            
               ```python
               # 嵌套代码
               print("Hello World")

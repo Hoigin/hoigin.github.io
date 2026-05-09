@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}}</title>
+
+    <!-- highlight.js 主题：浅色 / 深色，与博客主题同步切换 -->
+    <link rel="stylesheet" id="hljsLight" href="../../node_modules/highlight.js/styles/github.css" media="not all">
+    <link rel="stylesheet" id="hljsDark" href="../../node_modules/highlight.js/styles/github-dark.css" media="all">
+
+    <!-- 博客主题：浅色 / 深色 -->
+    <link rel="stylesheet" id="themeLight" href="../../src/styles/light.css" media="not all">
+    <link rel="stylesheet" id="themeDark" href="../../src/styles/dark.css" media="all">
+</head>
+<body>
+{{CONTENT}}
+</body>
+<script>
+    // 主题切换逻辑（与主页一致，默认深色）
+    const lightSheet = document.getElementById('themeLight');
+    const darkSheet = document.getElementById('themeDark');
+    const hljsLight = document.getElementById('hljsLight');
+    const hljsDark = document.getElementById('hljsDark');
+
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+        lightSheet.media = 'all';
+        darkSheet.media = 'not all';
+        hljsLight.media = 'all';
+        hljsDark.media = 'not all';
+    }
+
+    // 剥离 <pre> 内容中的 HTML 源码缩进（data-indent 记录缩进层数，不影响渲染）
+    document.querySelectorAll('pre[data-indent]').forEach(pre => {
+        const spaces = parseInt(pre.dataset.indent) * 4;
+        const prefix = ' '.repeat(spaces);
+        pre.innerHTML = pre.innerHTML.split('\n').map(line => {
+            if (line.startsWith(prefix)) return line.slice(spaces);
+            return line;
+        }).join('\n');
+    });
+</script>
+</html>
