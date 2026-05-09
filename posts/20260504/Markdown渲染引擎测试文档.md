@@ -91,7 +91,7 @@ console.log(person.greet());
 
 ## 四、链接和图片
 
-**外部链接：** [Google]([https://google.com](https://google.com/))
+**外部链接：** [Google](https://google.com/)
 
 **图片：**
 
