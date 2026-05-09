@@ -5,17 +5,53 @@
 **行内公式：** $E=mc^2$ 和 $\alpha + \beta = \gamma$
 
 **块级公式：**
-
 $$
-\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+\begin{align}
+\text{Fermi: } \Xi_l &=\sum_{a_l=0}^1e^{-(\alpha+\beta \varepsilon_l)a_l}=1+e^{-(\alpha+\beta \varepsilon_l)} \quad \overline{a_l}=\frac{1}{e^{\alpha+\beta \varepsilon_l}+1}
+\\
+\text{Bose: } \Xi_l &=\sum_{a_l=0}^{\infty}e^{-(\alpha+\beta \varepsilon_l)a_l}=\frac{1}{1-e^{-(\alpha+\beta \varepsilon_l)}} \quad \overline{a_l}=\frac{1}{e^{\alpha+\beta \varepsilon_l}-1}
+\end{align}
 $$
 
 $$
 \begin{aligned}
+\Xi &= \prod_m\sum_{a_m}e^{-(\alpha+\beta \varepsilon_m)a_m} = \prod_m \Xi_m
+\\
+a_1,& a_2, \cdots,a_l,\cdots a_m \text{ are all variables and } a_l \text{ is one of them.}
+\\
+\overline{a_l}&=\frac{1}{\Xi}\left(\sum_{a_l}a_le^{-(\alpha+\beta\varepsilon_l)a_l}\right)\cdot\prod_{m\neq l}\left(\sum_{a_m}e^{-(\alpha+\beta\varepsilon_m)a_m}\right)
+\\
+&=\frac{1}{\Xi_l}\sum_{a_l}a_le^{-(\alpha+\beta\varepsilon_l)a_l}
+\\
+&=-\frac{\partial \ln\Xi_l}{\partial \alpha}
+\end{aligned}
+$$
+
+矩阵
+$$
+e^{-\frac{it}{\hbar}H}=\cos(\frac{E}{\hbar}t)
+\begin{pmatrix}
+1 & 0 \\
+0 & 1 \\
+\end{pmatrix}
++\sin(\frac{E}{\hbar}t)
+\begin{pmatrix}
+0 & -1 \\
+1 & 0 \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+\cos(\frac{E}{\hbar}t) & -\sin(\frac{E}{\hbar}t) \\
+\sin(\frac{E}{\hbar}t) & \cos(\frac{E}{\hbar}t) \\
+\end{pmatrix}
+$$
+多行公式
+$$
+\begin{align}
 a &= b + c \\
 d &= e \times f \\
 g &= \frac{h}{i}
-\end{aligned}
+\end{align}
 $$
 
 ## 二、代码块

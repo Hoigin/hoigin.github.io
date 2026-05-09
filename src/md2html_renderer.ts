@@ -11,7 +11,9 @@
  */
 
 import markdownit from 'markdown-it';
+import mathjax from 'markdown-it-mathjax3-pro'
 import hljs from 'highlight.js';
+import mark from 'markdown-it-mark';
 import { full as emoji } from 'markdown-it-emoji';
 import fs from 'fs';
 import path from 'path';
@@ -27,7 +29,7 @@ const md = markdownit({
     html: true,
     linkify: true,
     typographer: true
-}).use(emoji);
+}).use(mathjax).use(mark).use(emoji);
 
 // ── 自定义 fence 渲染器 ──────────────────────────────────────────
 // 覆盖默认渲染，使用双列布局（行号列 + 代码列）避免跨行 span 被截断
@@ -175,12 +177,20 @@ export function renderMarkdown(filePath: string): string {
     const titleMatch = mdContent.match(/^#\s+(.+)$/m);
     const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
 
-    const htmlContent = md.render(mdContent);
+    const env: Record<string, any> = {};
+    const htmlContent = md.render(mdContent, env);
+
+    // MathJax 生成的 CSS（字体声明、字符排版、辅助层隐藏等）
+    const mathjaxCss = env.mathjax_stylesheet
+        ? `\n    <style>${env.mathjax_stylesheet}</style>`
+        : '';
+
     const formattedContent = formatHtml(htmlContent);
 
     const template = fs.readFileSync(path.join(ROOT_DIR, 'post_template.html'), 'utf-8');
     const fullHtml = template
         .replace('{{TITLE}}', title)
+        .replace('{{MATHJAX_CSS}}', mathjaxCss)
         .replace('{{CONTENT}}', formattedContent);
 
     // 输出到同目录，.md → .html，同名覆盖
