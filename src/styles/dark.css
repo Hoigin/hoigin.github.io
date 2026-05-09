@@ -89,3 +89,10 @@ body {
     font-size: 0.9em;
     line-height: 1.6;
 }
+
+/* ── 数学公式 ────────────────────────────────── */
+
+mjx-container[display="true"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+}

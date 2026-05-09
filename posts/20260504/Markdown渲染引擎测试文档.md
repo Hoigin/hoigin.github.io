@@ -14,7 +14,7 @@ $$
 $$
 
 $$
-\begin{aligned}
+\begin{align}
 \Xi &= \prod_m\sum_{a_m}e^{-(\alpha+\beta \varepsilon_m)a_m} = \prod_m \Xi_m
 \\
 a_1,& a_2, \cdots,a_l,\cdots a_m \text{ are all variables and } a_l \text{ is one of them.}
@@ -24,7 +24,7 @@ a_1,& a_2, \cdots,a_l,\cdots a_m \text{ are all variables and } a_l \text{ is on
 &=\frac{1}{\Xi_l}\sum_{a_l}a_le^{-(\alpha+\beta\varepsilon_l)a_l}
 \\
 &=-\frac{\partial \ln\Xi_l}{\partial \alpha}
-\end{aligned}
+\end{align}
 $$
 
 矩阵

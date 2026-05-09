@@ -182,14 +182,15 @@ export function renderMarkdown(filePath: string): string {
     const formattedContent = formatHtml(htmlContent);
 
     // 提取 MathJax 构建时生成的 CSS 样式表（隐藏 assistive-mml 等）
-    // 缩进与 <style> 标签对齐（8 格 = 2 层缩进）
-    const mathjaxCss = (env.mathjax_stylesheet || '')
+    // 构建完整的 <style> 标签，CSS 内容缩进 8 格与 <head> 层级对齐
+    const cssLines = (env.mathjax_stylesheet || '')
         .split('\n').map((line: string) => line.trim() ? '        ' + line : '').join('\n');
+    const mathjaxCssBlock = cssLines ? `<style id="mathjaxCss">\n${cssLines}\n    </style>` : '';
 
     const template = fs.readFileSync(path.join(ROOT_DIR, 'post_template.html'), 'utf-8');
     const fullHtml = template
         .replace('{{TITLE}}', title)
-        .replace('{{MATHJAX_CSS}}', mathjaxCss)
+        .replace('{{MATHJAX_CSS}}', mathjaxCssBlock)
         .replace('{{CONTENT}}', formattedContent);
 
     // 输出到同目录，.md → .html，同名覆盖
