@@ -33,31 +33,27 @@ const md = markdownit({
 }).use(mathjax).use(mark).use(emoji).use(alerts);
 
 // ── 替换 github-alerts 核心规则，支持嵌套 ────────────────────
-// 原版不跟踪嵌套层级，此版本：
-// 1. 用 nesting 计数器正确匹配 open/close 对
-// 2. [!TYPE] 是段落唯一内容时，隐藏该段落（设 hidden=true）
-// 3. alert 内的空 inline token 填入  ，使 <p></p> → <p>&nbsp;</p>
-// 4. 扫描源码找出带空格的 > 行，在对应位置插入 <p>&nbsp;</p>
-//    （markdown-it 在嵌套 blockquote 关闭时丢失带空格的行，
-//     只在源码中最后一个 > 后面有空格的行才渲染空行）
+// 1. nesting 计数器正确匹配 open/close 对
+// 2. [!TYPE] 是段落唯一内容时隐藏该段落
+// 3. alert 内的空 inline token 填入
+// 4. 扫描源码找回 markdown-it 丢失的带空格行，在对应位置插入 <p>&nbsp;</p>
 
 const ALERT_RE = /^\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]([^\n\r]*)/i;
 
-/** 判断源码行是否是"带空格的空行"：最后一个 > 后面仅有空白字符（不含换行）且非空 */
+/** 源码行最后一个 > 之后仅有空白且非空 → 带空格的空行 */
 function isSpacedEmptyLine(srcLines: string[], lineIdx: number): boolean {
     const line = srcLines[lineIdx];
     const lastGt = line.lastIndexOf('>');
     if (lastGt < 0) return false;
     const after = line.slice(lastGt + 1);
-    const afterTrimmed = after.replace(/\n$/, '').trim();
-    return afterTrimmed === '' && after.replace(/\n$/, '').length > 0;
+    return after.trim() === '' && after.length > 0;
 }
 
 md.core.ruler.at('github-alerts', (state) => {
     const tokens = state.tokens;
     const srcLines = state.src.split('\n');
 
-    // 先收集所有 alert 范围，避免 splice 改变索引
+    // 收集所有 alert 范围，从内到外处理以避免 splice 影响外层索引
     const ranges: { openIdx: number; closeIdx: number; firstContentIdx: number; match: RegExpMatchArray; level: number }[] = [];
 
     for (let i = 0; i < tokens.length; i++) {
@@ -76,68 +72,56 @@ md.core.ruler.at('github-alerts', (state) => {
         ranges.push({ openIdx: i, closeIdx: j - 1, firstContentIdx: fcIdx, match, level: tokens[i].level });
     }
 
-    // 从内到外处理（内层先 splice，外层索引不受影响）
     ranges.sort((a, b) => b.closeIdx - a.closeIdx);
 
     for (const { openIdx, closeIdx, firstContentIdx, match, level } of ranges) {
         const type = match[1].toLowerCase();
         const title = match[2].trim() || type.charAt(0).toUpperCase() + type.slice(1);
         const icon = DEFAULT_ALERT_ICONS[type] ?? '';
-        const open = tokens[openIdx];
-        const close = tokens[closeIdx];
         const firstContent = tokens[firstContentIdx];
 
+        // 剥离 [!TYPE]，若段落只剩标题则隐藏
         firstContent.content = firstContent.content.slice(match[0].length).trimStart();
-
         if (!firstContent.content) {
             firstContent.children = [];
-            const k = firstContentIdx;
-            if (k > openIdx && tokens[k - 1].type === 'paragraph_open') tokens[k - 1].hidden = true;
-            if (k + 1 <= closeIdx && tokens[k + 1].type === 'paragraph_close') tokens[k + 1].hidden = true;
             firstContent.hidden = true;
+            if (tokens[firstContentIdx - 1].type === 'paragraph_open') tokens[firstContentIdx - 1].hidden = true;
+            if (tokens[firstContentIdx + 1].type === 'paragraph_close') tokens[firstContentIdx + 1].hidden = true;
         }
 
-        open.type = 'alert_open';
-        open.tag = 'div';
-        open.meta = { title, type, icon };
-        close.type = 'alert_close';
-        close.tag = 'div';
+        tokens[openIdx].type = 'alert_open';
+        tokens[openIdx].tag = 'div';
+        tokens[openIdx].meta = { title, type, icon };
+        tokens[closeIdx].type = 'alert_close';
+        tokens[closeIdx].tag = 'div';
 
-        // alert 内的空 inline token 填入  ，使 <p></p> → <p>&nbsp;</p>
+        // alert 内的空 inline token 填入（非嵌套场景下的空行）
         for (let k = openIdx + 1; k < closeIdx; k++) {
             if (tokens[k].type !== 'inline' || tokens[k].content.trim() || tokens[k].hidden) continue;
             tokens[k].content = ' ';
             tokens[k].children = [];
         }
 
-        // 扫描源码：找出本 alert 范围内、与本层级匹配的"带空格空行"
-        // 在对应位置插入 <p>&nbsp;</p>：找到空格行之后第一个内容段落，在其前插入
+        // 扫描源码找回嵌套 blockquote 丢失的带空格行
+        const open = tokens[openIdx];
         if (!open.map) continue;
         const [startLine, endLine] = open.map;
         const targetGtCount = level + 1;
 
-        // 收集本 alert 范围内所有带空格的源码行（0-indexed 行号）
         const spacedSourceLines: number[] = [];
         for (let lineIdx = startLine; lineIdx < endLine; lineIdx++) {
             const line = srcLines[lineIdx];
-            const gtCount = (line.match(/>/g) || []).length;
-            if (gtCount !== targetGtCount) continue;
+            if ((line.match(/>/g) || []).length !== targetGtCount) continue;
             if (!isSpacedEmptyLine(srcLines, lineIdx)) continue;
             spacedSourceLines.push(lineIdx);
         }
 
         for (const spacedLine of spacedSourceLines) {
-            // 空格行在源码中的位置决定了它在 token 流中的位置
-            // 找到 token 流中 map[0] 恰好大于空格行的源码行号的第一个 token
-            // 在该 token 之前插入 <p>&nbsp;</p>
-            let insertPos = closeIdx; // 如果没有后续内容，在 alert_close 前插入
+            // 按 map[0] 定位：插入到空格行之后第一个 token 之前
+            let insertPos = closeIdx;
             for (let k = openIdx + 1; k < closeIdx; k++) {
-                const tokenMap = tokens[k].map;
-                if (!tokenMap) continue;
-                if (tokenMap[0] > spacedLine) {
-                    insertPos = k;
-                    break;
-                }
+                const m = tokens[k].map;
+                if (m && m[0] > spacedLine) { insertPos = k; break; }
             }
 
             const nbspace = new state.Token('inline', '', 0);
