@@ -45,7 +45,7 @@
 }
 
 .state {
-    color: var(--state-color);
+    color: var(--quote-color);
     font-family: "KaiTi", "Microsoft YaHei", sans-serif;
     font-size: 1.25rem;
 }

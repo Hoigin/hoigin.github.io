@@ -1461,38 +1461,18 @@
                 8
                 9
                 10
-                11
-                12
-                13
-                14
-                15
-                16
-                17
-                18
-                19
-                20
-                21</pre>
-            <pre data-indent="4"><code class="hljs">flowchart TD
-                    A[开始] --&gt; B{用户登录?}
-                    B -- 是 --&gt; C[进入系统]
-                    B -- 否 --&gt; D[登录页面]
-                    D --&gt; E[输入用户名密码]
-                    E --&gt; F{验证成功?}
-                    F -- 是 --&gt; C
-                    F -- 否 --&gt; G[显示错误信息]
-                    G --&gt; D
-                    
-                    C --&gt; H[选择功能]
-                    H --&gt; I{选择操作}
-                    I -- 查询 --&gt; J[显示查询结果]
-                    I -- 添加 --&gt; K[添加新记录]
-                    I -- 修改 --&gt; L[修改现有记录]
-                    I -- 删除 --&gt; M[删除记录]
-                    
-                    J --&gt; N[结束]
-                    K --&gt; N
-                    L --&gt; N
-                    M --&gt; N</code></pre>
+                11</pre>
+            <pre data-indent="4"><code class="hljs">sequenceDiagram
+                    participant Alice
+                    participant Bob
+                    Alice-&gt;&gt;John: Hello John, how are you?
+                    loop HealthCheck
+                        John-&gt;&gt;John: Fight against hypochondria
+                    end
+                    Note right of John: Rational thoughts &lt;br/&gt;prevail!
+                    John--&gt;&gt;Alice: Great!
+                    John-&gt;&gt;Bob: How about you?
+                    Bob--&gt;&gt;John: Jolly good!</code></pre>
         </div>
     </div>
     <div class="post-code-block">
@@ -1511,25 +1491,21 @@
                 11
                 12
                 13
-                14
-                15
-                16</pre>
-            <pre data-indent="4"><code class="hljs">flowchart LR
-                    subgraph 用户模块
-                        A[用户注册] --&gt; B[用户登录]
-                        B --&gt; C[用户信息管理]
-                    end
-                    
-                    subgraph 订单模块
-                        D[创建订单] --&gt; E[支付订单]
-                        E --&gt; F{支付成功?}
-                        F -- 是 --&gt; G[订单完成]
-                        F -- 否 --&gt; H[订单失败]
-                    end
-                    
-                    C --&gt; D
-                    G --&gt; I[评价订单]
-                    H --&gt; J[重新支付]</code></pre>
+                14</pre>
+            <pre data-indent="4"><code class="hljs">classDiagram
+                Class01 &lt;|-- AveryLongClass : Cool
+                Class03 *-- Class04
+                Class05 o-- Class06
+                Class07 .. Class08
+                Class09 --&gt; C2 : Where am i?
+                Class09 --* C3
+                Class09 --|&gt; Class07
+                Class07 : equals()
+                Class07 : Object[] elementData
+                Class01 : size()
+                Class01 : int chimp
+                Class01 : int gorilla
+                Class08 &lt;--&gt; C2: Cool label</code></pre>
         </div>
     </div>
     <h2>十一、复杂嵌套结构</h2>
@@ -1685,6 +1661,9 @@
     <p>下面是不是一个空的引用</p>
     <blockquote>
         <p>这是一段引用</p>
+        <blockquote>
+            <p>这是引用中的引用</p>
+        </blockquote>
     </blockquote>
     <p>下面是 github_alert</p>
     <div class="markdown-alert markdown-alert-important"><p class="markdown-alert-title"><svg class="octicon octicon-report" viewBox="0 0 16 16" width="16" height="16"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>Important</p>

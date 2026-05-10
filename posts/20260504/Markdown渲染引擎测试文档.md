@@ -201,48 +201,36 @@ console.log(person.greet());
 ## 十、Mermaid流程图
 
 ```mermaid
-flowchart TD
-    A[开始] --> B{用户登录?}
-    B -- 是 --> C[进入系统]
-    B -- 否 --> D[登录页面]
-    D --> E[输入用户名密码]
-    E --> F{验证成功?}
-    F -- 是 --> C
-    F -- 否 --> G[显示错误信息]
-    G --> D
-    
-    C --> H[选择功能]
-    H --> I{选择操作}
-    I -- 查询 --> J[显示查询结果]
-    I -- 添加 --> K[添加新记录]
-    I -- 修改 --> L[修改现有记录]
-    I -- 删除 --> M[删除记录]
-    
-    J --> N[结束]
-    K --> N
-    L --> N
-    M --> N
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>John: Hello John, how are you?
+    loop HealthCheck
+        John->>John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts <br/>prevail!
+    John-->>Alice: Great!
+    John->>Bob: How about you?
+    Bob-->>John: Jolly good!
 ```
 
 
 
 ```mermaid
-flowchart LR
-    subgraph 用户模块
-        A[用户注册] --> B[用户登录]
-        B --> C[用户信息管理]
-    end
-    
-    subgraph 订单模块
-        D[创建订单] --> E[支付订单]
-        E --> F{支付成功?}
-        F -- 是 --> G[订单完成]
-        F -- 否 --> H[订单失败]
-    end
-    
-    C --> D
-    G --> I[评价订单]
-    H --> J[重新支付]
+classDiagram
+Class01 <|-- AveryLongClass : Cool
+Class03 *-- Class04
+Class05 o-- Class06
+Class07 .. Class08
+Class09 --> C2 : Where am i?
+Class09 --* C3
+Class09 --|> Class07
+Class07 : equals()
+Class07 : Object[] elementData
+Class01 : size()
+Class01 : int chimp
+Class01 : int gorilla
+Class08 <--> C2: Cool label
 ```
 
 ## 十一、复杂嵌套结构
@@ -355,6 +343,8 @@ def complex_function_with_long_name(parameter1, parameter2, parameter3,
 下面是不是一个空的引用
 
 > 这是一段引用
+>
+> > 这是引用中的引用
 
 下面是 github_alert
 

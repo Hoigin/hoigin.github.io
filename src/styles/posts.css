@@ -86,10 +86,11 @@ img {
 /* ── 引用块 ──────────────────────────────────── */
 
 blockquote {
-    margin: 3em 0;
-    padding: 1em 1em;
-    border-left: 4px solid var(--border-color);
-    background: var(--card-bg);
+    margin: 1rem 1rem;
+    padding: 0 1em;
+    border-left: 4px solid var(--quote-color);
+    background: var(--page-bg);
+    color: var(--quote-color);
 }
 
 blockquote blockquote {
@@ -100,7 +101,7 @@ blockquote blockquote {
 
 .markdown-alert {
     padding: 0 1em;
-    margin-bottom: 16px;
+    margin: 1rem 1rem;
     color: inherit;
     border-left: 0.25em solid var(--alert-border);
 }
@@ -110,7 +111,7 @@ blockquote blockquote {
     font-size: 0.9rem;
     display: flex;
     align-items: center;
-    gap: 0.4em;
+    gap: 0.15rem;
     color: var(--alert-border);
 }
 
