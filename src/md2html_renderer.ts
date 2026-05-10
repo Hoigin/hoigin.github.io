@@ -144,6 +144,92 @@ const DEFAULT_ALERT_ICONS: Record<string, string> = {
     caution: '<svg class="octicon octicon-stop" viewBox="0 0 16 16" width="16" height="16"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>'
 };
 
+// ── 处理普通引用中的带空格空行 ──────────────────────
+// 源码中 > 后仅跟空白（非空）时，markdown-it 可能丢弃内容，
+// 导致空引用（无段落）或空段落（不可见）。
+// 此规则在对应位置填入或插入不可折断空格使其可见，
+// 与 GitHub Alert 中带空格空行的渲染逻辑一致。
+
+md.core.ruler.push('blockquote-spaced-lines', (state) => {
+    const tokens = state.tokens;
+    const srcLines = state.src.split('\n');
+
+    // 收集需要插入的位置：从内到外处理以避免 splice 影响外层索引
+    const inserts: { blockIdx: number; lineIdx: number; closeIdx: number; hasInline: boolean; inlineIdx: number }[] = [];
+
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].type !== 'blockquote_open') continue;
+
+        let nesting = 1;
+        let j = i + 1;
+        while (j < tokens.length && nesting > 0) {
+            if (tokens[j].type === 'blockquote_open') nesting++;
+            else if (tokens[j].type === 'blockquote_close') nesting--;
+            j++;
+        }
+
+        const closeIdx = j - 1;
+        const open = tokens[i];
+        if (!open.map) continue;
+
+        const [startLine, endLine] = open.map;
+        const level = open.level;
+        const targetGtCount = level + 1;
+
+        for (let lineIdx = startLine; lineIdx < endLine; lineIdx++) {
+            const line = srcLines[lineIdx];
+            if ((line.match(/>/g) || []).length !== targetGtCount) continue;
+            if (!isSpacedEmptyLine(srcLines, lineIdx)) continue;
+
+            // 查找对应位置的空 inline token
+            let hasInline = false;
+            let inlineIdx = -1;
+            for (let k = i + 1; k < closeIdx; k++) {
+                if (tokens[k].type !== 'inline' || tokens[k].content.trim() || tokens[k].hidden) continue;
+                const prev = tokens[k - 1];
+                if (prev?.type === 'paragraph_open' && prev.map && prev.map[0] === lineIdx) {
+                    hasInline = true;
+                    inlineIdx = k;
+                    break;
+                }
+            }
+
+            inserts.push({ blockIdx: i, lineIdx, closeIdx, hasInline, inlineIdx });
+        }
+    }
+
+    // 从内到外处理（closeIdx 降序），避免 splice 累积偏移
+    inserts.sort((a, b) => b.closeIdx - a.closeIdx);
+
+    for (const { blockIdx, lineIdx, closeIdx, hasInline, inlineIdx } of inserts) {
+        if (hasInline) {
+            // 有空 inline token：填入不可折断空格
+            const textToken = new state.Token('text', '', 0);
+            textToken.content = ' ';
+            tokens[inlineIdx].children = [textToken];
+            tokens[inlineIdx].content = ' ';
+        } else {
+            // 无 inline token（markdown-it 完全丢弃了内容）：插入段落 + 不可折断空格
+            // 找到 blockquote_close 后第一个 map[0] > lineIdx 的 token 之前的位置
+            let insertPos = closeIdx;
+            for (let k = blockIdx + 1; k < closeIdx; k++) {
+                const m = tokens[k].map;
+                if (m && m[0] > lineIdx) { insertPos = k; break; }
+            }
+
+            const nbspace = new state.Token('inline', '', 0);
+            nbspace.content = ' ';
+            const textChild = new state.Token('text', '', 0);
+            textChild.content = ' ';
+            nbspace.children = [textChild];
+            const pOpen = new state.Token('paragraph_open', 'p', 1);
+            pOpen.map = [lineIdx, lineIdx + 1];
+            const pClose = new state.Token('paragraph_close', 'p', -1);
+            tokens.splice(insertPos, 0, pOpen, nbspace, pClose);
+        }
+    }
+});
+
 // ── 自定义 fence 渲染器 ──────────────────────────────────────────
 // Mermaid 代码块输出 <div class="mermaid"> 由客户端渲染，
 // 其他代码块使用双列布局（行号列 + 代码列）避免跨行 span 被截断
