@@ -14,6 +14,18 @@
     --avatar-border: #5a4e3a;
     --toggle-color: #808080;
 
+    /* 顶栏 */
+    --topbar-bg: #1e1e1e;
+    --topbar-border: #5a4e3a;
+
+    /* 目录侧栏 */
+    --toc-bg: #232323;
+    --toc-border: #5a4e3a;
+    --toc-heading-color: #d4d4d4;
+    --toc-link-color: #a0a0a0;
+    --toc-active-color: #d4d4d4;
+    --toc-hover-bg: rgba(90, 78, 58, 0.2);
+
     /* 代码块 */
     --post-code-bg: #22272e;
     --post-code-border: #444c56;
@@ -30,7 +42,7 @@
     --alert-caution-border: #f85149;  /* --alert-caution-bg: #30171a; */
 }
 
-/* Mermaid 图表 */
+/* Mermaid 图表（仅覆盖 SVG 背景色，内部样式由 Mermaid 主题自带处理） */
 .mermaid svg {
     background: #1e1e1e;
 }

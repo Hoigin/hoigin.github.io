@@ -4,7 +4,8 @@
  * 功能：基于 markdown-it + markdown-it-mathjax3-pro + highlight.js + markdown-it-emoji
  *       将 Markdown 文件渲染为 HTML，使用 post_template.html 模板包裹输出，写入同目录（同名覆盖）。
  *       数学公式由 MathJax 服务端预渲染为 CSS，代码块由 highlight.js 服务端语法高亮，
- *       Mermaid 图表输出为 <div class="mermaid"> 由客户端 mermaid.js 渲染，
+ *       Mermaid 图表输出为 <div class="mermaid"> 由客户端 mermaid.js 按当前主题渲染，
+ *       主题切换时 Mermaid 会重新渲染以适配新主题，
  *       GitHub Alert 支持嵌套结构，==高亮== 由 markdown-it-mark 处理。
  *
  * 运行方式：npx tsx src/md2html_renderer.ts <input.md>
@@ -371,7 +372,8 @@ function countBlockCloses(line: string): number {
  * 将 Markdown 文件渲染为 HTML 并写入同目录。
  * 模板中的 {{TITLE}}、{{CONTENT}}、{{MATHJAX_CSS}}、{{MERMAID_SCRIPT}} 占位符会被替换。
  * 渲染后的 HTML 会去除多余空行并添加缩进，<pre> 内容不受影响。
- * Mermaid 脚本仅在页面包含 mermaid 图表时注入，由客户端动态加载。
+ * Mermaid 脚本仅在页面包含 mermaid 图表时注入，由客户端动态加载并按当前主题渲染；
+ * 主题切换时客户端还原原始源码并调用 mermaid.run() 重新渲染以适配新主题。
  *
  * @param filePath - Markdown 文件的路径（相对或绝对均可）
  * @returns 输出 HTML 文件的绝对路径
@@ -395,14 +397,19 @@ export function renderMarkdown(filePath: string): string {
     const mathjaxCssBlock = cssLines ? `<style id="mathjaxCss">\n${cssLines}\n    </style>` : '';
 
     // Mermaid 条件加载：仅当页面含 .mermaid 元素时注入脚本
+    // 先保存原始源码到 data-original，再手动调用 mermaid.run() 渲染
     const hasMermaid = formattedContent.includes('class="mermaid"');
     const mermaidScript = hasMermaid ? `
     if (document.querySelector('.mermaid')) {
+        document.querySelectorAll('.mermaid').forEach(el => {
+            el.setAttribute('data-original', el.innerHTML);
+        });
         const s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
         s.onload = () => {
             const theme = saved === 'dark' ? 'dark' : 'default';
-            mermaid.initialize({ startOnLoad: true, theme });
+            mermaid.initialize({ startOnLoad: false, theme });
+            mermaid.run();
         };
         document.head.appendChild(s);
     }` : '';

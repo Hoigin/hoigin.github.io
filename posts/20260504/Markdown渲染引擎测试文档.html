@@ -1209,7 +1209,19 @@
     <link rel="stylesheet" id="themeDark" href="../../src/styles/dark.css" media="all">
 </head>
 <body>
-    <h1>Markdown渲染引擎测试文档</h1>
+    <div class="topbar">
+        <button id="toc-toggle" aria-label="展开目录">
+            <svg viewBox="0 0 16 16"><path d="M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z"/></svg>
+        </button>
+        <button id="theme-toggle" aria-label="切换主题">
+            <svg viewBox="0 0 16 16"><path d="M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z"></path></svg>
+        </button>
+    </div>
+    <div class="page-body">
+        <nav class="toc-sidebar" id="toc-sidebar"></nav>
+        <div class="post-wrapper">
+            <article class="post-body">
+                <h1>Markdown渲染引擎测试文档</h1>
     <h2>一、数学公式</h2>
     <p><strong>行内公式：</strong> <mjx-container class="MathJax" jax="CHTML" style="font-size: 113.1%; position: relative;"><mjx-math class=" MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D438 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="4"><mjx-c class="mjx-c1D45A TEX-I"></mjx-c></mjx-mi><mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></math></mjx-assistive-mml></mjx-container> 和 <mjx-container class="MathJax" jax="CHTML" style="font-size: 113.1%; position: relative;"><mjx-math class=" MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FC TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="3"><mjx-c class="mjx-c1D6FD TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="4"><mjx-c class="mjx-c1D6FE TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>α</mi><mo>+</mo><mi>β</mi><mo>=</mo><mi>γ</mi></math></mjx-assistive-mml></mjx-container></p>
     <p><strong>块级公式：</strong></p>
@@ -1692,15 +1704,25 @@
     </div>
     <p><strong>测试完成！</strong></p>
     <p>此文档包含了Markdown渲染引擎需要测试的所有基本和高级功能，可用于验证渲染效果的完整性和正确性。</p>
-</body>
+            </article>
+        </div>
+    </div>
 
 <script>
 
-    // 主题切换逻辑（与主页一致，默认深色）
+    // ── 主题切换（与主页一致，默认深色） ──────────────────────────────
     const lightSheet = document.getElementById('themeLight');
     const darkSheet = document.getElementById('themeDark');
     const hljsLight = document.getElementById('hljsLight');
     const hljsDark = document.getElementById('hljsDark');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    const sunPath = "M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z";
+    const moonPath = "M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z";
+
+    function setIcon(path) {
+        themeToggle.querySelector('svg path').setAttribute('d', path);
+    }
 
     const saved = localStorage.getItem('theme') || 'dark';
     if (saved === 'light') {
@@ -1708,20 +1730,89 @@
         darkSheet.media = 'not all';
         hljsLight.media = 'all';
         hljsDark.media = 'not all';
+        setIcon(sunPath);
     }
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = darkSheet.media === 'all';
+        lightSheet.media = isDark ? 'all' : 'not all';
+        darkSheet.media = isDark ? 'not all' : 'all';
+        hljsLight.media = isDark ? 'all' : 'not all';
+        hljsDark.media = isDark ? 'not all' : 'all';
+        setIcon(isDark ? sunPath : moonPath);
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+
+        // 切换主题时重新渲染 Mermaid 图表
+        if (typeof mermaid !== 'undefined') {
+            const newTheme = isDark ? 'default' : 'dark';
+            document.querySelectorAll('.mermaid').forEach(el => {
+                el.removeAttribute('data-processed');
+                el.innerHTML = el.getAttribute('data-original');
+            });
+            mermaid.initialize({ startOnLoad: false, theme: newTheme });
+            mermaid.run();
+        }
+    });
 
 
     if (document.querySelector('.mermaid')) {
+        document.querySelectorAll('.mermaid').forEach(el => {
+            el.setAttribute('data-original', el.innerHTML);
+        });
         const s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
         s.onload = () => {
             const theme = saved === 'dark' ? 'dark' : 'default';
-            mermaid.initialize({ startOnLoad: true, theme });
+            mermaid.initialize({ startOnLoad: false, theme });
+            mermaid.run();
         };
         document.head.appendChild(s);
     }
 
-    // 剥离 <pre> 内容中的 HTML 源码缩进（data-indent 记录缩进层数，不影响渲染）
+    // ── 目录生成与切换 ────────────────────────────────────────────────
+    const tocToggle = document.getElementById('toc-toggle');
+    const tocSidebar = document.getElementById('toc-sidebar');
+    const tocListPath = "M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z";
+    const tocClosePath = "M2.72 2.72a.75.75 0 011.06 0L8 6.94l4.22-4.22a.75.75 0 011.06 1.06L9.06 8l4.22 4.22a.75.75 0 01-1.06 1.06L8 9.06l-4.22 4.22a.75.75 0 01-1.06-1.06L6.94 8 2.72 3.78a.75.75 0 010-1.06z";
+
+    const postBody = document.querySelector('.post-body');
+    const headings = postBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    let tocHTML = '';
+    let idCounter = 0;
+    headings.forEach(h => {
+        if (!h.id) {
+            h.id = 'heading-' + (++idCounter);
+        }
+        const level = parseInt(h.tagName[1]);
+        const indent = (level - 1) * 1.25;
+        tocHTML += `<a class="toc-item toc-level-${level}" href="#${h.id}" style="padding-left:${indent}rem">${h.textContent}</a>`;
+    });
+
+    if (tocHTML) {
+        tocSidebar.innerHTML = `<div class="toc-title">目录</div>${tocHTML}`;
+    }
+
+    let tocOpen = false;
+    function toggleToc() {
+        tocOpen = !tocOpen;
+        document.body.classList.toggle('toc-open', tocOpen);
+        tocToggle.querySelector('svg path').setAttribute('d', tocOpen ? tocClosePath : tocListPath);
+    }
+    tocToggle.addEventListener('click', toggleToc);
+
+    // 点击目录项滚动到对应位置
+    tocSidebar.querySelectorAll('.toc-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(item.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // 剥离 <pre> 内容中的 HTML 源码缩进
     document.querySelectorAll('pre[data-indent]').forEach(pre => {
         const spaces = parseInt(pre.dataset.indent) * 4;
         const prefix = ' '.repeat(spaces);
@@ -1730,5 +1821,22 @@
             return line;
         }).join('\n');
     });
+
+    // 滚动监听：高亮当前目录项
+    const tocItems = tocSidebar.querySelectorAll('.toc-item');
+    function updateActiveToc() {
+        let activeId = '';
+        headings.forEach(h => {
+            if (h.getBoundingClientRect().top <= 100) {
+                activeId = h.id;
+            }
+        });
+        tocItems.forEach(item => {
+            item.classList.toggle('toc-active', item.getAttribute('href') === '#' + activeId);
+        });
+    }
+    window.addEventListener('scroll', updateActiveToc);
+    updateActiveToc();
 </script>
+</body>
 </html>

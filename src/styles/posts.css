@@ -1,3 +1,129 @@
+/* ── 顶栏 ─────────────────────────────────────── */
+
+.topbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 48px;
+    padding: 0 1rem;
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--topbar-border);
+    z-index: 100;
+}
+
+#toc-toggle,
+#theme-toggle {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+    color: var(--toggle-color);
+    transition: color 0.2s ease;
+    border-radius: 50%;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#toc-toggle svg,
+#theme-toggle svg {
+    fill: currentColor;
+    width: 2rem;
+    height: 2rem;
+}
+
+#toc-toggle:hover,
+#theme-toggle:hover {
+    outline: none;
+    background: transparent;
+    color: var(--icon-link-hover);
+}
+
+/* ── 页面布局 ──────────────────────────────── */
+
+.page-body {
+    display: flex;
+}
+
+.toc-sidebar {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: var(--toc-bg);
+    border-right: 1px solid var(--toc-border);
+    transform: translateX(-260px);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    z-index: 99;
+    padding: 0.75rem 0;
+}
+
+body.toc-open .toc-sidebar {
+    transform: translateX(0);
+}
+
+.post-wrapper {
+    flex: 1;
+    min-width: 0;
+    transition: margin-left 0.3s ease;
+}
+
+body.toc-open .post-wrapper {
+    margin-left: 260px;
+}
+
+.post-body {
+    padding: 2rem 2rem 4rem;
+}
+
+/* ── 目录项 ────────────────────────────────── */
+
+.toc-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--toc-heading-color);
+    padding: 0.5rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--toc-border);
+    margin-bottom: 0.5rem;
+}
+
+.toc-item {
+    display: block;
+    padding: 0.4rem 1.5rem;
+    color: var(--toc-link-color);
+    text-decoration: none;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    transition: color 0.15s, background 0.15s;
+}
+
+.toc-item:hover {
+    color: var(--toc-active-color);
+    background: var(--toc-hover-bg);
+}
+
+.toc-item.toc-active {
+    color: var(--toc-active-color);
+    font-weight: 600;
+}
+
+.toc-level-1 { font-weight: 600; }
+.toc-level-3 { font-size: 0.8rem; }
+.toc-level-4,
+.toc-level-5,
+.toc-level-6 { font-size: 0.75rem; color: var(--muted-color); }
+
 /* ── 文章通用样式（与主题无关） ─────────────────── */
 
 body {
