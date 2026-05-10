@@ -21,7 +21,9 @@
 <body>
 {{CONTENT}}
 </body>
+
 <script>
+
     // 主题切换逻辑（与主页一致，默认深色）
     const lightSheet = document.getElementById('themeLight');
     const darkSheet = document.getElementById('themeDark');
@@ -35,6 +37,8 @@
         hljsLight.media = 'all';
         hljsDark.media = 'not all';
     }
+
+{{MERMAID_SCRIPT}}
 
     // 剥离 <pre> 内容中的 HTML 源码缩进（data-indent 记录缩进层数，不影响渲染）
     document.querySelectorAll('pre[data-indent]').forEach(pre => {

@@ -29,3 +29,8 @@
     --alert-warning-border: #9a6700;  /* --alert-warning-bg: #fff8c5; */
     --alert-caution-border: #cf222e;  /* --alert-caution-bg: #ffebe9; */
 }
+
+/* Mermaid 图表 */
+.mermaid svg {
+    background: #ffffff;
+}

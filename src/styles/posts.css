@@ -133,3 +133,11 @@ blockquote blockquote {
 .markdown-alert .markdown-alert {
     margin: 0.5em 0;
 }
+
+/* ── Mermaid 图表 ─────────────────────────────── */
+
+.mermaid {
+    text-align: center;
+    overflow-x: auto;
+    margin: 1em 0;
+}

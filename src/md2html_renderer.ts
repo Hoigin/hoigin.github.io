@@ -1,9 +1,11 @@
 /**
  * md2html_renderer.ts — Markdown 转 HTML 渲染模块
  *
- * 功能：基于 markdown-it + highlight.js + markdown-it-emoji 将 Markdown 文件
- *       渲染为 HTML，使用 post_template.html 模板包裹输出，写入同目录（同名覆盖）。
- *       代码块自带语言标签和行号，无需额外插件。
+ * 功能：基于 markdown-it + markdown-it-mathjax3-pro + highlight.js + markdown-it-emoji
+ *       将 Markdown 文件渲染为 HTML，使用 post_template.html 模板包裹输出，写入同目录（同名覆盖）。
+ *       数学公式由 MathJax 服务端预渲染为 CSS，代码块由 highlight.js 服务端语法高亮，
+ *       Mermaid 图表输出为 <div class="mermaid"> 由客户端 mermaid.js 渲染，
+ *       GitHub Alert 支持嵌套结构，==高亮== 由 markdown-it-mark 处理。
  *
  * 运行方式：npx tsx src/md2html_renderer.ts <input.md>
  *
@@ -33,10 +35,10 @@ const md = markdownit({
 }).use(mathjax).use(mark).use(emoji).use(alerts);
 
 // ── 替换 github-alerts 核心规则，支持嵌套 ────────────────────
-// 1. nesting 计数器正确匹配 open/close 对
+// 1. nesting 计数器正确匹配 blockquote_open/close 对
 // 2. [!TYPE] 是段落唯一内容时隐藏该段落
-// 3. alert 内的空 inline token 填入
-// 4. 扫描源码找回 markdown-it 丢失的带空格行，在对应位置插入 <p>&nbsp;</p>
+// 3. alert 内的空 inline token 填入空格防止塌缩
+// 4. 扫描源码找回 markdown-it 丢失的带空格空行，在对应位置插入 <p>&nbsp;</p>
 
 const ALERT_RE = /^\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]([^\n\r]*)/i;
 
@@ -143,11 +145,18 @@ const DEFAULT_ALERT_ICONS: Record<string, string> = {
 };
 
 // ── 自定义 fence 渲染器 ──────────────────────────────────────────
-// 覆盖默认渲染，使用双列布局（行号列 + 代码列）避免跨行 span 被截断
+// Mermaid 代码块输出 <div class="mermaid"> 由客户端渲染，
+// 其他代码块使用双列布局（行号列 + 代码列）避免跨行 span 被截断
 
 md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx];
     const lang = token.info.trim().split(/\s+/)[0];
+
+    // Mermaid 图表：输出 <div class="mermaid">，由客户端 mermaid.js 渲染
+    if (lang === 'mermaid') {
+        return `<div class="mermaid">${md.utils.escapeHtml(token.content.trim())}</div>`;
+    }
+
     const content = token.content;
 
     // 语法高亮或纯文本转义
@@ -274,8 +283,9 @@ function countBlockCloses(line: string): number {
 
 /**
  * 将 Markdown 文件渲染为 HTML 并写入同目录。
- * 模板中的 {{TITLE}} 和 {{CONTENT}} 占位符会被替换。
+ * 模板中的 {{TITLE}}、{{CONTENT}}、{{MATHJAX_CSS}}、{{MERMAID_SCRIPT}} 占位符会被替换。
  * 渲染后的 HTML 会去除多余空行并添加缩进，<pre> 内容不受影响。
+ * Mermaid 脚本仅在页面包含 mermaid 图表时注入，由客户端动态加载。
  *
  * @param filePath - Markdown 文件的路径（相对或绝对均可）
  * @returns 输出 HTML 文件的绝对路径
@@ -298,10 +308,24 @@ export function renderMarkdown(filePath: string): string {
         .split('\n').map((line: string) => line.trim() ? '        ' + line : '').join('\n');
     const mathjaxCssBlock = cssLines ? `<style id="mathjaxCss">\n${cssLines}\n    </style>` : '';
 
+    // Mermaid 条件加载：仅当页面含 .mermaid 元素时注入脚本
+    const hasMermaid = formattedContent.includes('class="mermaid"');
+    const mermaidScript = hasMermaid ? `
+    if (document.querySelector('.mermaid')) {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+        s.onload = () => {
+            const theme = saved === 'dark' ? 'dark' : 'default';
+            mermaid.initialize({ startOnLoad: true, theme });
+        };
+        document.head.appendChild(s);
+    }` : '';
+
     const template = fs.readFileSync(path.join(ROOT_DIR, 'post_template.html'), 'utf-8');
     const fullHtml = template
         .replace('{{TITLE}}', title)
         .replace('{{MATHJAX_CSS}}', mathjaxCssBlock)
+        .replace('{{MERMAID_SCRIPT}}', mermaidScript)
         .replace('{{CONTENT}}', formattedContent);
 
     // 输出到同目录，.md → .html，同名覆盖

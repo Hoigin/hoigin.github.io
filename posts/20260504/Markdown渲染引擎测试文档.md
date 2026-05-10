@@ -239,20 +239,20 @@ Class08 <--> C2: Cool label
 
 1. 第一步骤
 
-```bash
-# 安装依赖
-npm install
-```
+   ```bash
+   # 安装依赖
+   npm install
+   ```
 
 2. 第二步骤
 
-```typescript
-// 配置文件
-const config = {
-    port: 3000,
-    host: 'localhost'
-};
-```
+   ```typescript
+   // 配置文件
+   const config = {
+       port: 3000,
+       host: 'localhost'
+   };
+   ```
 
 **列表中的引用：**
 

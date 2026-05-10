@@ -1448,98 +1448,65 @@
     <h2>九、脚注</h2>
     <p>这是一个包含脚注的句子，这里也有一个。</p>
     <h2>十、Mermaid流程图</h2>
-    <div class="post-code-block">
-        <span class="post-code-lang">mermaid</span>
-        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
-            <pre class="post-code-line-numbers" data-indent="4">1
-                2
-                3
-                4
-                5
-                6
-                7
-                8
-                9
-                10
-                11</pre>
-            <pre data-indent="4"><code class="hljs">sequenceDiagram
-                    participant Alice
-                    participant Bob
-                    Alice-&gt;&gt;John: Hello John, how are you?
-                    loop HealthCheck
-                        John-&gt;&gt;John: Fight against hypochondria
-                    end
-                    Note right of John: Rational thoughts &lt;br/&gt;prevail!
-                    John--&gt;&gt;Alice: Great!
-                    John-&gt;&gt;Bob: How about you?
-                    Bob--&gt;&gt;John: Jolly good!</code></pre>
-        </div>
-    </div>
-    <div class="post-code-block">
-        <span class="post-code-lang">mermaid</span>
-        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
-            <pre class="post-code-line-numbers" data-indent="4">1
-                2
-                3
-                4
-                5
-                6
-                7
-                8
-                9
-                10
-                11
-                12
-                13
-                14</pre>
-            <pre data-indent="4"><code class="hljs">classDiagram
-                Class01 &lt;|-- AveryLongClass : Cool
-                Class03 *-- Class04
-                Class05 o-- Class06
-                Class07 .. Class08
-                Class09 --&gt; C2 : Where am i?
-                Class09 --* C3
-                Class09 --|&gt; Class07
-                Class07 : equals()
-                Class07 : Object[] elementData
-                Class01 : size()
-                Class01 : int chimp
-                Class01 : int gorilla
-                Class08 &lt;--&gt; C2: Cool label</code></pre>
-        </div>
-    </div>
+    <div class="mermaid">sequenceDiagram
+        participant Alice
+        participant Bob
+        Alice-&gt;&gt;John: Hello John, how are you?
+        loop HealthCheck
+        John-&gt;&gt;John: Fight against hypochondria
+        end
+        Note right of John: Rational thoughts &lt;br/&gt;prevail!
+        John--&gt;&gt;Alice: Great!
+        John-&gt;&gt;Bob: How about you?
+        Bob--&gt;&gt;John: Jolly good!</div>
+    <div class="mermaid">classDiagram
+        Class01 &lt;|-- AveryLongClass : Cool
+        Class03 *-- Class04
+        Class05 o-- Class06
+        Class07 .. Class08
+        Class09 --&gt; C2 : Where am i?
+        Class09 --* C3
+        Class09 --|&gt; Class07
+        Class07 : equals()
+        Class07 : Object[] elementData
+        Class01 : size()
+        Class01 : int chimp
+        Class01 : int gorilla
+        Class08 &lt;--&gt; C2: Cool label</div>
     <h2>十一、复杂嵌套结构</h2>
     <p><strong>列表中的代码块：</strong></p>
     <ol>
-        <li>第一步骤</li>
+        <li>
+            <p>第一步骤</p>
+            <div class="post-code-block">
+                <span class="post-code-lang">bash</span>
+                <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                    <pre class="post-code-line-numbers" data-indent="6">1
+                        2</pre>
+                    <pre data-indent="6"><code class="hljs"><span class="hljs-comment"># 安装依赖</span>
+                        npm install</code></pre>
+                </div>
+            </div>
+        </li>
+        <li>
+            <p>第二步骤</p>
+            <div class="post-code-block">
+                <span class="post-code-lang">typescript</span>
+                <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                    <pre class="post-code-line-numbers" data-indent="6">1
+                        2
+                        3
+                        4
+                        5</pre>
+                    <pre data-indent="6"><code class="hljs"><span class="hljs-comment">// 配置文件</span>
+                        <span class="hljs-keyword">const</span> config = {
+                            <span class="hljs-attr">port</span>: <span class="hljs-number">3000</span>,
+                            <span class="hljs-attr">host</span>: <span class="hljs-string">&#x27;localhost&#x27;</span>
+                        };</code></pre>
+                </div>
+            </div>
+        </li>
     </ol>
-    <div class="post-code-block">
-        <span class="post-code-lang">bash</span>
-        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
-            <pre class="post-code-line-numbers" data-indent="4">1
-                2</pre>
-            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 安装依赖</span>
-                npm install</code></pre>
-        </div>
-    </div>
-    <ol start="2">
-        <li>第二步骤</li>
-    </ol>
-    <div class="post-code-block">
-        <span class="post-code-lang">typescript</span>
-        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
-            <pre class="post-code-line-numbers" data-indent="4">1
-                2
-                3
-                4
-                5</pre>
-            <pre data-indent="4"><code class="hljs"><span class="hljs-comment">// 配置文件</span>
-                <span class="hljs-keyword">const</span> config = {
-                    <span class="hljs-attr">port</span>: <span class="hljs-number">3000</span>,
-                    <span class="hljs-attr">host</span>: <span class="hljs-string">&#x27;localhost&#x27;</span>
-                };</code></pre>
-        </div>
-    </div>
     <p><strong>列表中的引用：</strong></p>
     <ul>
         <li>项目一</li>
@@ -1724,7 +1691,9 @@
     <p><strong>测试完成！</strong></p>
     <p>此文档包含了Markdown渲染引擎需要测试的所有基本和高级功能，可用于验证渲染效果的完整性和正确性。</p>
 </body>
+
 <script>
+
     // 主题切换逻辑（与主页一致，默认深色）
     const lightSheet = document.getElementById('themeLight');
     const darkSheet = document.getElementById('themeDark');
@@ -1737,6 +1706,17 @@
         darkSheet.media = 'not all';
         hljsLight.media = 'all';
         hljsDark.media = 'not all';
+    }
+
+
+    if (document.querySelector('.mermaid')) {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+        s.onload = () => {
+            const theme = saved === 'dark' ? 'dark' : 'default';
+            mermaid.initialize({ startOnLoad: true, theme });
+        };
+        document.head.appendChild(s);
     }
 
     // 剥离 <pre> 内容中的 HTML 源码缩进（data-indent 记录缩进层数，不影响渲染）
