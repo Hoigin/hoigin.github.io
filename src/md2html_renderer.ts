@@ -36,17 +36,32 @@ const md = markdownit({
 // 原版不跟踪嵌套层级，此版本：
 // 1. 用 nesting 计数器正确匹配 open/close 对
 // 2. [!TYPE] 是段落唯一内容时，隐藏该段落（设 hidden=true）
-// 3. 在每个 alert_close 前插入空段落 <p>&nbsp;</p>
-//    （对应 markdown 中每级末尾的 > 空行）
+// 3. alert 内的空 inline token 填入  ，使 <p></p> → <p>&nbsp;</p>
+// 4. 扫描源码找出带空格的 > 行，在对应位置插入 <p>&nbsp;</p>
+//    （markdown-it 在嵌套 blockquote 关闭时丢失带空格的行，
+//     只在源码中最后一个 > 后面有空格的行才渲染空行）
 
 const ALERT_RE = /^\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]([^\n\r]*)/i;
 
+/** 判断源码行是否是"带空格的空行"：最后一个 > 后面仅有空白字符（不含换行）且非空 */
+function isSpacedEmptyLine(srcLines: string[], lineIdx: number): boolean {
+    const line = srcLines[lineIdx];
+    const lastGt = line.lastIndexOf('>');
+    if (lastGt < 0) return false;
+    const after = line.slice(lastGt + 1);
+    const afterTrimmed = after.replace(/\n$/, '').trim();
+    return afterTrimmed === '' && after.replace(/\n$/, '').length > 0;
+}
+
 md.core.ruler.at('github-alerts', (state) => {
     const tokens = state.tokens;
+    const srcLines = state.src.split('\n');
+
+    // 先收集所有 alert 范围，避免 splice 改变索引
+    const ranges: { openIdx: number; closeIdx: number; firstContentIdx: number; match: RegExpMatchArray; level: number }[] = [];
+
     for (let i = 0; i < tokens.length; i++) {
         if (tokens[i].type !== 'blockquote_open') continue;
-
-        const open = tokens[i];
         let nesting = 1;
         let j = i + 1;
         while (j < tokens.length && nesting > 0) {
@@ -54,31 +69,31 @@ md.core.ruler.at('github-alerts', (state) => {
             else if (tokens[j].type === 'blockquote_close') nesting--;
             j++;
         }
-        const close = tokens[j - 1];
-
-        const firstContent = tokens.slice(i, j).find(t => t.type === 'inline');
-        if (!firstContent) continue;
-
-        const match = firstContent.content.match(ALERT_RE);
+        const fcIdx = tokens.findIndex((t, k) => k > i && k < j && t.type === 'inline');
+        if (fcIdx < 0) continue;
+        const match = tokens[fcIdx].content.match(ALERT_RE);
         if (!match) continue;
+        ranges.push({ openIdx: i, closeIdx: j - 1, firstContentIdx: fcIdx, match, level: tokens[i].level });
+    }
 
+    // 从内到外处理（内层先 splice，外层索引不受影响）
+    ranges.sort((a, b) => b.closeIdx - a.closeIdx);
+
+    for (const { openIdx, closeIdx, firstContentIdx, match, level } of ranges) {
         const type = match[1].toLowerCase();
         const title = match[2].trim() || type.charAt(0).toUpperCase() + type.slice(1);
         const icon = DEFAULT_ALERT_ICONS[type] ?? '';
+        const open = tokens[openIdx];
+        const close = tokens[closeIdx];
+        const firstContent = tokens[firstContentIdx];
 
         firstContent.content = firstContent.content.slice(match[0].length).trimStart();
 
         if (!firstContent.content) {
-            // [!TYPE] 是段落唯一内容 → 隐藏整个段落
             firstContent.children = [];
-            // 标记 paragraph_open 和 paragraph_close 为 hidden
-            let k = i + 1;
-            while (k < j) {
-                if (tokens[k].type === 'inline' && tokens[k] === firstContent) break;
-                k++;
-            }
-            if (k > i && tokens[k - 1].type === 'paragraph_open') tokens[k - 1].hidden = true;
-            if (k + 1 < j && tokens[k + 1].type === 'paragraph_close') tokens[k + 1].hidden = true;
+            const k = firstContentIdx;
+            if (k > openIdx && tokens[k - 1].type === 'paragraph_open') tokens[k - 1].hidden = true;
+            if (k + 1 <= closeIdx && tokens[k + 1].type === 'paragraph_close') tokens[k + 1].hidden = true;
             firstContent.hidden = true;
         }
 
@@ -88,14 +103,50 @@ md.core.ruler.at('github-alerts', (state) => {
         close.type = 'alert_close';
         close.tag = 'div';
 
-        // 在 alert_close 前插入空段落 <p>&nbsp;</p>
-        // 对应 markdown 中每级末尾的 > 空行
-        const nbspace = new state.Token('inline', '', 0);
-        nbspace.content = ' ';
-        nbspace.children = [];
-        const pOpen = new state.Token('paragraph_open', 'p', 1);
-        const pClose = new state.Token('paragraph_close', 'p', -1);
-        tokens.splice(j - 1, 0, pOpen, nbspace, pClose);
+        // alert 内的空 inline token 填入  ，使 <p></p> → <p>&nbsp;</p>
+        for (let k = openIdx + 1; k < closeIdx; k++) {
+            if (tokens[k].type !== 'inline' || tokens[k].content.trim() || tokens[k].hidden) continue;
+            tokens[k].content = ' ';
+            tokens[k].children = [];
+        }
+
+        // 扫描源码：找出本 alert 范围内、与本层级匹配的"带空格空行"
+        // 在对应位置插入 <p>&nbsp;</p>：找到空格行之后第一个内容段落，在其前插入
+        if (!open.map) continue;
+        const [startLine, endLine] = open.map;
+        const targetGtCount = level + 1;
+
+        // 收集本 alert 范围内所有带空格的源码行（0-indexed 行号）
+        const spacedSourceLines: number[] = [];
+        for (let lineIdx = startLine; lineIdx < endLine; lineIdx++) {
+            const line = srcLines[lineIdx];
+            const gtCount = (line.match(/>/g) || []).length;
+            if (gtCount !== targetGtCount) continue;
+            if (!isSpacedEmptyLine(srcLines, lineIdx)) continue;
+            spacedSourceLines.push(lineIdx);
+        }
+
+        for (const spacedLine of spacedSourceLines) {
+            // 空格行在源码中的位置决定了它在 token 流中的位置
+            // 找到 token 流中 map[0] 恰好大于空格行的源码行号的第一个 token
+            // 在该 token 之前插入 <p>&nbsp;</p>
+            let insertPos = closeIdx; // 如果没有后续内容，在 alert_close 前插入
+            for (let k = openIdx + 1; k < closeIdx; k++) {
+                const tokenMap = tokens[k].map;
+                if (!tokenMap) continue;
+                if (tokenMap[0] > spacedLine) {
+                    insertPos = k;
+                    break;
+                }
+            }
+
+            const nbspace = new state.Token('inline', '', 0);
+            nbspace.content = ' ';
+            nbspace.children = [];
+            const pOpen = new state.Token('paragraph_open', 'p', 1);
+            const pClose = new state.Token('paragraph_close', 'p', -1);
+            tokens.splice(insertPos, 0, pOpen, nbspace, pClose);
+        }
     }
 });
 
