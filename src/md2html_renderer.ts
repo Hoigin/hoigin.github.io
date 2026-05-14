@@ -119,6 +119,8 @@ md.core.ruler.at('github-alerts', (state) => {
             spacedSourceLines.push(lineIdx);
         }
 
+        // 先计算所有插入位置，再从高到低 splice 避免索引偏移
+        const insertPositions: number[] = [];
         for (const spacedLine of spacedSourceLines) {
             // 按 map[0] 定位：插入到空格行之后第一个 token 之前
             let insertPos = closeIdx;
@@ -126,6 +128,11 @@ md.core.ruler.at('github-alerts', (state) => {
                 const m = tokens[k].map;
                 if (m && m[0] > spacedLine) { insertPos = k; break; }
             }
+            insertPositions.push(insertPos);
+        }
+
+        insertPositions.sort((a, b) => b - a);
+        for (const insertPos of insertPositions) {
 
             const nbspace = new state.Token('inline', '', 0);
             nbspace.content = ' ';
@@ -202,32 +209,38 @@ md.core.ruler.push('blockquote-spaced-lines', (state) => {
     // 从内到外处理（closeIdx 降序），避免 splice 累积偏移
     inserts.sort((a, b) => b.closeIdx - a.closeIdx);
 
-    for (const { blockIdx, lineIdx, closeIdx, hasInline, inlineIdx } of inserts) {
-        if (hasInline) {
-            // 有空 inline token：填入不可折断空格
-            const textToken = new state.Token('text', '', 0);
-            textToken.content = ' ';
-            tokens[inlineIdx].children = [textToken];
-            tokens[inlineIdx].content = ' ';
-        } else {
-            // 无 inline token（markdown-it 完全丢弃了内容）：插入段落 + 不可折断空格
-            // 找到 blockquote_close 后第一个 map[0] > lineIdx 的 token 之前的位置
-            let insertPos = closeIdx;
-            for (let k = blockIdx + 1; k < closeIdx; k++) {
-                const m = tokens[k].map;
-                if (m && m[0] > lineIdx) { insertPos = k; break; }
-            }
+    // 先处理 hasInline（直接修改 token，不 splice）
+    for (const { hasInline, inlineIdx } of inserts) {
+        if (!hasInline) continue;
+        const textToken = new state.Token('text', '', 0);
+        textToken.content = ' ';
+        tokens[inlineIdx].children = [textToken];
+        tokens[inlineIdx].content = ' ';
+    }
 
-            const nbspace = new state.Token('inline', '', 0);
-            nbspace.content = ' ';
-            const textChild = new state.Token('text', '', 0);
-            textChild.content = ' ';
-            nbspace.children = [textChild];
-            const pOpen = new state.Token('paragraph_open', 'p', 1);
-            pOpen.map = [lineIdx, lineIdx + 1];
-            const pClose = new state.Token('paragraph_close', 'p', -1);
-            tokens.splice(insertPos, 0, pOpen, nbspace, pClose);
+    // 计算 splice 位置，从高到低处理避免索引偏移
+    const spliceInserts: { blockIdx: number; lineIdx: number; insertPos: number }[] = [];
+    for (const { blockIdx, lineIdx, closeIdx, hasInline } of inserts) {
+        if (hasInline) continue;
+        let insertPos = closeIdx;
+        for (let k = blockIdx + 1; k < closeIdx; k++) {
+            const m = tokens[k].map;
+            if (m && m[0] > lineIdx) { insertPos = k; break; }
         }
+        spliceInserts.push({ blockIdx, lineIdx, insertPos });
+    }
+    spliceInserts.sort((a, b) => b.insertPos - a.insertPos);
+
+    for (const { lineIdx, insertPos } of spliceInserts) {
+        const nbspace = new state.Token('inline', '', 0);
+        nbspace.content = ' ';
+        const textChild = new state.Token('text', '', 0);
+        textChild.content = ' ';
+        nbspace.children = [textChild];
+        const pOpen = new state.Token('paragraph_open', 'p', 1);
+        pOpen.map = [lineIdx, lineIdx + 1];
+        const pClose = new state.Token('paragraph_close', 'p', -1);
+        tokens.splice(insertPos, 0, pOpen, nbspace, pClose);
     }
 });
 

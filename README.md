@@ -12,20 +12,25 @@
 
 为了实现极大的灵活性并兼容尽可能广的写作习惯，本项目对以下内容提供了开箱即用的深度渲染支持：
 
-- 📦 **GitHub 标准 Markdown (GFM) 全面支持**
-  完美解析标准链接、章节链接 (Section Link)、自定义锚点 (Custom Anchor)、图像、列表与任务清单、Emoji 以及脚注 (Footnotes)。特别支持 GFM 标准的五种 Alerts（Note, Tip, Important, Warning, Caution）及其复杂的嵌套结构。
+📦 **GitHub 标准 Markdown (GFM) 全面支持**
   
-- 🧮 **硬核数学公式渲染 (MathJax)**
-  基于 MathJax 驱动，不仅支持常规的行内/块级数学公式，还深度兼容物理、化学等专业学科特有的 $\LaTeX$ 宏包语法支持。
+完美解析标准链接、章节链接 (Section Link)、自定义锚点 (Custom Anchor)、图像、列表与任务清单、Emoji 以及脚注 (Footnotes)。特别支持 GFM 标准的五种 Alerts（Note, Tip, Important, Warning, Caution）及其复杂的嵌套结构。
+  
+🧮 **硬核数学公式渲染 (MathJax)**
 
-- 💻 **超过 190 种语言的代码高亮 (highlight.js)**
-  集成强大的 highlight.js，无论是主流语言还是极小众的编程语言，都能获得精准、美观的代码块语法高亮显示。
+基于 MathJax 驱动，不仅支持常规的行内/块级数学公式，还深度兼容物理、化学等专业学科特有的 $\LaTeX$ 宏包语法支持。
 
-- 📊 **强大的图表支持 (Mermaid)**
-  内置 Mermaid 客户端侧渲染支持。只需编写纯文本，即可在博客上动态生成流程图、时序图、状态图等复杂图表。
+💻 **超过 190 种语言的代码高亮 (highlight.js)**
 
-- ✍️ **Typora 专属扩展语法**
-  无缝衔接 Typora 用户的写作习惯，原生支持 `==高亮==` (Highlight)、`^上标^` (Superscript) 与 `~下标~` (Subscript) 等扩展语法。
+集成强大的 highlight.js，无论是主流语言还是极小众的编程语言，都能获得精准、美观的代码块语法高亮显示。
+
+📊 **强大的图表支持 (Mermaid)**
+
+内置 Mermaid 客户端侧渲染支持。只需编写纯文本，即可在博客上动态生成流程图、时序图、状态图等复杂图表。
+
+✍️ **Typora 专属扩展语法**
+
+无缝衔接 Typora 用户的写作习惯，原生支持 `==高亮==` (Highlight)、`^上标^` (Superscript) 与 `~下标~` (Subscript) 等扩展语法。
 
 ## 🚀 快速开始 (Getting Started)
 
