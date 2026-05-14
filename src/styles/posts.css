@@ -1,26 +1,35 @@
 /* ── 顶栏 ─────────────────────────────────────── */
 
 .topbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 48px;
-    padding: 0 1rem;
+    padding: 0 1rem 0 0.5rem;
     background: var(--topbar-bg);
     border-bottom: 1px solid var(--topbar-border);
     z-index: 100;
 }
 
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+#home-link,
 #toc-toggle,
 #theme-toggle {
     flex-shrink: 0;
     background: transparent;
     border: none;
-    padding: 0.25rem;
-    width: 2rem;
-    height: 2rem;
+    padding: 0;
+    width: 1.7rem;
+    height: 1.7rem;
     cursor: pointer;
     color: var(--toggle-color);
     transition: color 0.2s ease;
@@ -34,13 +43,15 @@
     justify-content: center;
 }
 
+#home-link svg,
 #toc-toggle svg,
 #theme-toggle svg {
     fill: currentColor;
-    width: 2rem;
-    height: 2rem;
+    width: 1.7rem;
+    height: 1.7rem;
 }
 
+#home-link:hover,
 #toc-toggle:hover,
 #theme-toggle:hover {
     outline: none;
@@ -52,17 +63,19 @@
 
 .page-body {
     display: flex;
+    margin-top: 1rem;
+    overflow-x: hidden;
 }
 
 .toc-sidebar {
     position: fixed;
-    top: 48px;
+    top: 2.5rem;
     left: 0;
     bottom: 0;
-    width: 260px;
+    width: 280px;
     background: var(--toc-bg);
     border-right: 1px solid var(--toc-border);
-    transform: translateX(-260px);
+    transform: translateX(-280px);
     transition: transform 0.3s ease;
     overflow-y: auto;
     z-index: 99;
@@ -76,15 +89,18 @@ body.toc-open .toc-sidebar {
 .post-wrapper {
     flex: 1;
     min-width: 0;
+    overflow-x: hidden;
     transition: margin-left 0.3s ease;
 }
 
 body.toc-open .post-wrapper {
-    margin-left: 260px;
+    margin-left: 280px;
 }
 
 .post-body {
     padding: 2rem 2rem 4rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 /* ── 目录项 ────────────────────────────────── */
@@ -93,18 +109,18 @@ body.toc-open .post-wrapper {
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--toc-heading-color);
-    padding: 0.5rem 1.5rem 0.75rem;
+    padding: 0.5rem 2rem 0.5rem;
     border-bottom: 1px solid var(--toc-border);
     margin-bottom: 0.5rem;
 }
 
 .toc-item {
     display: block;
-    padding: 0.4rem 1.5rem;
+    padding: 0.4rem 0 0.4rem 0;
     color: var(--toc-link-color);
     text-decoration: none;
-    font-size: 0.92rem;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    line-height: 1.2;
     transition: color 0.15s, background 0.15s;
 }
 
@@ -118,15 +134,10 @@ body.toc-open .post-wrapper {
     font-weight: 600;
 }
 
-.toc-level-1 { font-weight: 600; }
-.toc-level-3 { font-size: 0.8rem; }
-.toc-level-4,
-.toc-level-5,
-.toc-level-6 { font-size: 0.75rem; color: var(--muted-color); }
-
 /* ── 文章通用样式（与主题无关） ─────────────────── */
 
 body {
+    margin: 0;
     font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
     background: var(--page-bg);
     color: var(--page-text);
@@ -194,6 +205,13 @@ body {
 }
 
 /* ── 数学公式 ────────────────────────────────── */
+
+/* ── 行内代码换行 ─────────────────────────────── */
+
+.post-body code:not(.hljs) {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
 
 mjx-container[display="true"] {
     overflow-x: auto;

@@ -388,7 +388,21 @@ export function renderMarkdown(filePath: string): string {
 
     const env: Record<string, any> = {};
     const htmlContent = md.render(mdContent, env);
-    const formattedContent = formatHtml(htmlContent);
+
+    // Typora 下载的网络图片保存为 URL 编码文件名（如 https%3A%2F%2F...webp），
+    // 但浏览器解码 src 中的 %3A → :、%2F → /，把本地路径变成远程 URL 导致图片无法加载。
+    // 将 <img src> 中的 % 二次编码为 %25，浏览器解码一层后仍为 %3A%2F，匹配磁盘文件名。
+    // 本地图片路径不含 % 字符，不受此逻辑影响。
+    const fixedContent = htmlContent.replace(
+        /<img\s[^>]*src="([^"]*)"[^>]*>/g,
+        (match, src) => {
+            if (!src.includes('%')) return match;
+            const fixedSrc = src.replace(/%/g, '%25');
+            return match.replace(src, fixedSrc);
+        }
+    );
+
+    const formattedContent = formatHtml(fixedContent);
 
     // 提取 MathJax 构建时生成的 CSS 样式表（隐藏 assistive-mml 等）
     // 构建完整的 <style> 标签，CSS 内容缩进 8 格与 <head> 层级对齐
