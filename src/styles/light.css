@@ -34,6 +34,9 @@
     --post-code-line-color: #999;
     --post-code-line-border: #ddd;
 
+    /* 目录遮罩层 */
+    --toc-overlay-bg: rgba(0, 0, 0, 0.5);
+
     /* 提示容器 */
     --alert-note-border: #0969da;    /* --alert-note-bg: #ddf4ff; */
     --alert-tip-border: #1a7f37;     /* --alert-tip-bg: #dafbe1; */

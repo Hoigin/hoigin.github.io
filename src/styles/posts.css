@@ -103,6 +103,57 @@ body.toc-open .post-wrapper {
     word-break: break-word;
 }
 
+/* ── 遮罩层 ─────────────────────────────────── */
+
+.toc-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--toc-overlay-bg, rgba(0, 0, 0, 0.5));
+    z-index: 98;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    /* 桌面端默认不显示 */
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .toc-overlay {
+        display: block;
+    }
+
+    body.toc-open .toc-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .toc-sidebar {
+        z-index: 99;
+    }
+
+    body.toc-open .post-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .post-body {
+        padding: 1.5rem 1rem 3rem;
+    }
+}
+
+@media (min-width: 601px) {
+    .post-wrapper {
+        transition: margin-left 0.3s ease;
+    }
+
+    .post-body {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+}
+
 /* ── 目录项 ────────────────────────────────── */
 
 .toc-title {

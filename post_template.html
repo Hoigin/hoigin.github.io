@@ -34,6 +34,7 @@
     </div>
     <div class="page-body">
         <nav class="toc-sidebar" id="toc-sidebar"></nav>
+        <div class="toc-overlay" id="toc-overlay"></div>
         <div class="post-wrapper">
             <article class="post-body">
             {{CONTENT}}
@@ -116,12 +117,21 @@
     }
 
     let tocOpen = false;
+    const tocOverlay = document.getElementById('toc-overlay');
+
     function toggleToc() {
         tocOpen = !tocOpen;
         document.body.classList.toggle('toc-open', tocOpen);
         tocToggle.querySelector('svg path').setAttribute('d', tocOpen ? tocClosePath : tocListPath);
     }
     tocToggle.addEventListener('click', toggleToc);
+
+    // 移动端：点击遮罩关闭目录
+    if (tocOverlay) {
+        tocOverlay.addEventListener('click', () => {
+            if (tocOpen) toggleToc();
+        });
+    }
 
     // 点击目录项滚动到对应位置
     tocSidebar.querySelectorAll('.toc-item').forEach(item => {
@@ -130,6 +140,10 @@
             const target = document.querySelector(item.getAttribute('href'));
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // 移动端：点击目录项后自动关闭目录
+            if (window.innerWidth < 600 && tocOpen) {
+                toggleToc();
             }
         });
     });
