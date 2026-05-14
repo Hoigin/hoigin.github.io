@@ -2,37 +2,46 @@
     --page-bg: #ffffff;
     --page-text: #333333;
     --card-bg: #ffffff;
-    --card-border: #c9b99a;
-    --card-shadow: rgba(80, 60, 30, 0.08);
+    --card-border: #dfe2e5;
+    --card-shadow: rgba(0, 0, 0, 0.04);
     --title-color: #333333;
-    --link-color: #000000;
+    --link-color: #4183C4;
     --title-link-hover: #e74c3c;
     --icon-link-hover: #2c3e50;
-    --border-color: #c9b99a;
-    --muted-color: #999999;
-    --quote-color: #888888;
-    --avatar-border: #bfaa80;
+    --border-color: #dfe2e5;
+    --muted-color: #777777;
+    --quote-color: #777777;
+    --quote-border-color: #dfe2e5;
+    --avatar-border: #dfe2e5;
     --toggle-color: #888888;
 
     /* 顶栏 */
     --topbar-bg: #ffffff;
-    --topbar-border: #c9b99a;
+    --topbar-border: #dfe2e5;
 
     /* 目录侧栏 */
-    --toc-bg: #faf8f5;
-    --toc-border: #c9b99a;
+    --toc-bg: #fafafa;
+    --toc-border: #dfe2e5;
     --toc-heading-color: #333333;
     --toc-link-color: #555555;
     --toc-active-color: #000000;
-    --toc-hover-bg: rgba(201, 185, 158, 0.15);
+    --toc-hover-bg: rgba(0, 0, 0, 0.04);
 
     /* 代码块 */
     --post-code-bg: #f8f8f8;
-    --post-code-border: #ddd;
-    --post-code-lang-bg: #eee;
+    --post-code-border: #e7eaed;
+    --post-code-lang-bg: #f8f8f8;
     --post-code-lang-color: #666;
     --post-code-line-color: #999;
-    --post-code-line-border: #ddd;
+    --post-code-line-border: #e7eaed;
+
+    /* 行内代码 */
+    --inline-code-bg: #f3f4f4;
+    --inline-code-border: #e7eaed;
+
+    /* 表格 */
+    --table-border-color: #dfe2e5;
+    --table-header-bg: #f8f8f8;
 
     /* 目录遮罩层 */
     --toc-overlay-bg: rgba(0, 0, 0, 0.5);

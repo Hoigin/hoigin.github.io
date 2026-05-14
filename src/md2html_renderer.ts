@@ -244,6 +244,26 @@ md.core.ruler.push('blockquote-spaced-lines', (state) => {
     }
 });
 
+// ── 自定义表格单元格渲染器（将 align 属性转为 style） ──────────────
+// markdown-it 默认输出 align="center" 等 HTML5 废弃属性，
+// 转为 style="text-align:..." 以确保浏览器渲染对齐效果
+
+md.renderer.rules.td = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const alignAttr = token.attrs?.find(a => a[0] === 'align');
+    const style = alignAttr ? ` style="text-align:${alignAttr[1]}"` : '';
+    const content = token.children ? self.renderInline(token.children, options, env) : '';
+    return `<td${style}>${content}</td>`;
+};
+
+md.renderer.rules.th = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const alignAttr = token.attrs?.find(a => a[0] === 'align');
+    const style = alignAttr ? ` style="text-align:${alignAttr[1]}"` : '';
+    const content = token.children ? self.renderInline(token.children, options, env) : '';
+    return `<th${style}>${content}</th>`;
+};
+
 // ── 自定义 fence 渲染器 ──────────────────────────────────────────
 // Mermaid 代码块输出 <div class="mermaid"> 由客户端渲染，
 // 其他代码块使用双列布局（行号列 + 代码列）避免跨行 span 被截断

@@ -8,7 +8,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 48px;
+    height: 3rem;
     padding: 0 1rem 0 0.5rem;
     background: var(--topbar-bg);
     border-bottom: 1px solid var(--topbar-border);
@@ -192,6 +192,7 @@ body {
     font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
     background: var(--page-bg);
     color: var(--page-text);
+    line-height: 1.6;
 }
 
 /* ── 代码块容器 ─────────────────────────────── */
@@ -199,7 +200,7 @@ body {
 .post-code-block {
     background: var(--post-code-bg);
     border: 2px solid var(--post-code-border);
-    border-radius: 4px;
+    border-radius: 0.25rem;
     margin: 1em 0;
 }
 
@@ -207,13 +208,13 @@ body {
 
 .post-code-lang {
     display: block;
-    padding: 4px 12px;
-    font-size: 0.8em;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
     color: var(--post-code-lang-color);
     background: var(--post-code-lang-bg);
     border-bottom: 1px solid var(--post-code-border);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.03125rem;
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
@@ -234,7 +235,7 @@ body {
     user-select: none;
     line-height: 1.6;
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    font-size: 0.9em;
+    font-size: 0.9rem;
     margin: 0;
 }
 
@@ -251,15 +252,20 @@ body {
     display: inline;
     overflow-x: visible;
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    font-size: 0.9em;
+    font-size: 0.9rem;
     line-height: 1.6;
 }
 
 /* ── 数学公式 ────────────────────────────────── */
 
-/* ── 行内代码换行 ─────────────────────────────── */
+/* ── 行内代码 ─────────────────────────────── */
 
 .post-body code:not(.hljs) {
+    background-color: var(--inline-code-bg);
+    border: 1px solid var(--inline-code-border);
+    border-radius: 0.1875rem;
+    padding: 0 0.125rem 0 0.125rem;
+    font-size: 0.9rem;
     overflow-wrap: break-word;
     word-break: break-word;
 }
@@ -280,16 +286,16 @@ img {
 
 /* ── 引用块 ──────────────────────────────────── */
 
-blockquote {
-    margin: 1rem 1rem;
-    padding: 0 1em;
-    border-left: 4px solid var(--quote-color);
-    background: var(--page-bg);
+.post-body blockquote {
+    margin: 0.8em 0;
+    padding: 0 0.9375rem;
+    border-left: 0.25rem solid var(--quote-border-color);
     color: var(--quote-color);
 }
 
-blockquote blockquote {
+.post-body blockquote blockquote {
     margin: 0.5em 0;
+    padding-right: 0;
 }
 
 /* ── 提示容器（GitHub Alerts） ──────────────────── */
@@ -298,7 +304,7 @@ blockquote blockquote {
     padding: 0 1em;
     margin: 1rem 1rem;
     color: inherit;
-    border-left: 0.25em solid var(--alert-border);
+    border-left: 0.25rem solid var(--alert-border);
 }
 
 .markdown-alert-title {
@@ -335,4 +341,135 @@ blockquote blockquote {
     text-align: center;
     overflow-x: auto;
     margin: 1em 0;
+}
+
+/* ── 超链接 ─────────────────────────────────── */
+
+.post-body a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.post-body a:hover {
+    text-decoration: underline;
+}
+
+/* ── 表格 ──────────────────────────────────── */
+
+.post-body table {
+    padding: 0;
+    word-break: initial;
+    border-collapse: collapse;
+    margin: 0.8em 0;
+    width: 100%;
+}
+
+.post-body table tr {
+    border: 1px solid var(--table-border-color);
+    margin: 0;
+    padding: 0;
+}
+
+.post-body table tr:nth-child(2n),
+.post-body thead {
+    background-color: var(--table-header-bg);
+}
+
+.post-body table th {
+    font-weight: bold;
+    border: 1px solid var(--table-border-color);
+    border-bottom-width: 0.125rem;
+    margin: 0;
+    padding: 0.375rem 0.8125rem;
+}
+
+.post-body table td {
+    border: 1px solid var(--table-border-color);
+    margin: 0;
+    padding: 0.375rem 0.8125rem;
+}
+
+.post-body table th:first-child,
+.post-body table td:first-child {
+    margin-top: 0;
+}
+
+.post-body table th:last-child,
+.post-body table td:last-child {
+    margin-bottom: 0;
+}
+
+/* ── 列表 ──────────────────────────────────── */
+
+.post-body ul,
+.post-body ol {
+    padding-left: 1.6rem;
+    margin: 0.8rem 0;
+}
+
+.post-body li {
+    margin: 0.4rem 0;
+}
+
+.post-body li > ol,
+.post-body li > ul {
+    margin: 0 0;
+}
+
+/* ── 标题 ──────────────────────────────────── */
+
+.post-body h1,
+.post-body h2,
+.post-body h3,
+.post-body h4,
+.post-body h5,
+.post-body h6 {
+    position: relative;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    line-height: 1.4;
+    cursor: text;
+}
+
+.post-body h1 {
+    font-size: 2.25rem;
+    line-height: 1.2;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.post-body h2 {
+    font-size: 1.75rem;
+    line-height: 1.225;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.post-body h3 {
+    font-size: 1.5rem;
+    line-height: 1.43;
+}
+
+.post-body h4 {
+    font-size: 1.25rem;
+}
+
+.post-body h5 {
+    font-size: 1rem;
+}
+
+.post-body h6 {
+    font-size: 1rem;
+    color: var(--muted-color);
+}
+
+/* ── 分割线 ──────────────────────────────────── */
+
+.post-body hr {
+    height: 0.125rem;
+    padding: 0;
+    margin: 1rem 0;
+    background-color: var(--border-color);
+    border: 0 none;
+    overflow: hidden;
+    box-sizing: content-box;
 }
