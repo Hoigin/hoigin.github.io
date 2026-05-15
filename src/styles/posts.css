@@ -448,6 +448,22 @@ img {
     margin: 0 0;
 }
 
+/* ── 任务列表 ──────────────────────────────── */
+
+.post-body .task-list-item {
+    list-style: none;
+}
+
+.post-body .task-list-item-checkbox {
+    margin-left: -1.3rem;
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--task-checkbox-accent);
+    vertical-align: middle;
+    pointer-events: none;
+    cursor: default;
+}
+
 /* ── 标题 ──────────────────────────────────── */
 
 .post-body h1,

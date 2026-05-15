@@ -17,6 +17,7 @@ import markdownit from 'markdown-it';
 import mathjax from 'markdown-it-mathjax3-pro'
 import hljs from 'highlight.js';
 import mark from 'markdown-it-mark';
+import tasklist from 'markdown-it-task-lists';
 import { full as emoji } from 'markdown-it-emoji';
 import alerts from 'markdown-it-github-alerts';
 import fs from 'fs';
@@ -33,7 +34,7 @@ const md = markdownit({
     html: true,
     linkify: true,
     typographer: true
-}).use(mathjax).use(mark).use(emoji).use(alerts);
+}).use(mathjax).use(mark).use(tasklist, { enabled: true }).use(emoji).use(alerts);
 
 // ── 替换 github-alerts 核心规则，支持嵌套 ────────────────────
 // 1. nesting 计数器正确匹配 blockquote_open/close 对

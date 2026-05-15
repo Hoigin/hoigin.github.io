@@ -52,6 +52,9 @@
     --alert-important-border: #8250df; /* --alert-important-bg: #fbefff; */
     --alert-warning-border: #9a6700;  /* --alert-warning-bg: #fff8c5; */
     --alert-caution-border: #cf222e;  /* --alert-caution-bg: #ffebe9; */
+
+    /* 任务列表 */
+    --task-checkbox-accent: #4183C4;
 }
 
 /* Mermaid 图表（仅覆盖 SVG 背景色，内部样式由 Mermaid 主题自带处理） */
