@@ -92,6 +92,30 @@
 
 {{MERMAID_SCRIPT}}
 
+    // ── 页面内跳转：定位到顶栏下方 ────────────────────────────────────
+    const topbar = document.querySelector('.topbar');
+
+    function scrollToBelowTopbar(target) {
+        const offset = topbar.getBoundingClientRect().height;
+        window.scrollTo({ behavior: 'smooth', top: target.getBoundingClientRect().top + window.scrollY - offset });
+    }
+
+    document.querySelectorAll('.post-body a[href^="#"]').forEach(link => {
+        link.addEventListener('click', e => {
+            const id = link.getAttribute('href').slice(1);
+            const target = document.getElementById(decodeURIComponent(id));
+            if (target) { e.preventDefault(); scrollToBelowTopbar(target); }
+        });
+    });
+
+    document.querySelectorAll('.footnote-backref').forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.getElementById(decodeURIComponent(link.getAttribute('href').slice(1)));
+            if (target) scrollToBelowTopbar(target);
+        });
+    });
+
     // ── 目录生成与切换 ────────────────────────────────────────────────
     const tocToggle = document.getElementById('toc-toggle');
     const tocSidebar = document.getElementById('toc-sidebar');

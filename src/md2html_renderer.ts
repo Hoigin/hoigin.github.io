@@ -19,6 +19,7 @@ import hljs from 'highlight.js';
 import mark from 'markdown-it-mark';
 import tasklist from 'markdown-it-task-lists';
 import { full as emoji } from 'markdown-it-emoji';
+import footnote from 'markdown-it-footnote';
 import alerts from 'markdown-it-github-alerts';
 import fs from 'fs';
 import path from 'path';
@@ -34,7 +35,7 @@ const md = markdownit({
     html: true,
     linkify: true,
     typographer: true
-}).use(mathjax).use(mark).use(tasklist, { enabled: true }).use(emoji).use(alerts);
+}).use(mathjax).use(mark).use(tasklist, { enabled: true }).use(emoji).use(footnote).use(alerts);
 
 // ── 替换 github-alerts 核心规则，支持嵌套 ────────────────────
 // 1. nesting 计数器正确匹配 blockquote_open/close 对
@@ -244,6 +245,37 @@ md.core.ruler.push('blockquote-spaced-lines', (state) => {
         tokens.splice(insertPos, 0, pOpen, nbspace, pClose);
     }
 });
+
+// ── 标题 ID 生成（与锚点链接 href 格式一致） ──────────────────────
+// markdown-it 不默认给标题添加 id，导致页面内锚点跳转无法匹配目标标题。
+// 此规则将标题文本转换为 slug 并设为 id 属性，格式与 [link](#slug) 的 href 对应：
+// 英文小写、空格→连字符、保留 CJK 字符、去除标点。
+// 重复标题追加 -1/-2 后缀，与 GitHub 行为一致。
+
+function slugify(text: string): string {
+    let slug = text.replace(/<[^>]+>/g, '');   // 剔除 HTML 标签
+    slug = slug.toLowerCase();
+    slug = slug.replace(/[^\w一-鿿㐀-䶿\-\s]/g, ''); // 保留字母数字CJK连字符空格
+    slug = slug.replace(/\s+/g, '-');          // 空格→连字符
+    slug = slug.replace(/-+/g, '-');           // 合并连续连字符
+    slug = slug.replace(/^-|-$/g, '');         // 剔除首尾连字符
+    return slug;
+}
+
+md.renderer.rules.heading_open = (tokens, idx, _options, env) => {
+    const token = tokens[idx];
+    const inlineToken = tokens[idx + 1];
+    const text = inlineToken?.type === 'inline' ? inlineToken.content : '';
+    const baseSlug = slugify(text);
+    // 处理重复标题：追加 -1/-2 后缀
+    const slugCounts: Record<string, number> = (env as any).__headingSlugCounts || {};
+    const count = slugCounts[baseSlug] || 0;
+    slugCounts[baseSlug] = count + 1;
+    (env as any).__headingSlugCounts = slugCounts;
+    const id = count > 0 ? `${baseSlug}-${count}` : baseSlug;
+    token.attrSet('id', id);
+    return `<${token.tag} id="${id}">`;
+};
 
 // ── 自定义表格单元格渲染器（将 align 属性转为 style） ──────────────
 // markdown-it 默认输出 align="center" 等 HTML5 废弃属性，
