@@ -294,6 +294,7 @@ body {
     border-radius: 0.1875rem;
     padding: 0 0.125rem 0 0.125rem;
     font-size: 0.9rem;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     overflow-wrap: break-word;
     word-break: break-word;
 }

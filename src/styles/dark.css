@@ -5,7 +5,7 @@
     --card-border: #31302e;
     --card-shadow: rgba(0, 0, 0, 0.3);
     --title-color: #d4d4d4;
-    --link-color: #d4d4d4;
+    --link-color: #58a6ff;
     --title-link-hover: #e74c3c;
     --icon-link-hover: #d4d4d4;
     --border-color: #31302e;
@@ -27,16 +27,16 @@
     --toc-hover-bg: rgba(90, 78, 58, 0.2);
 
     /* 代码块 */
-    --post-code-bg: #22272e;
-    --post-code-border: #444c56;
-    --post-code-lang-bg: #2d333b;
-    --post-code-lang-color: #768390;
-    --post-code-line-color: #545d68;
-    --post-code-line-border: #444c56;
+    --post-code-bg: #232323;
+    --post-code-border: #363636;
+    --post-code-lang-bg: #2a2a2a;
+    --post-code-lang-color: #8a8a8a;
+    --post-code-line-color: #666666;
+    --post-code-line-border: #363636;
 
     /* 行内代码 */
-    --inline-code-bg: #2d2d2d;
-    --inline-code-border: #444c56;
+    --inline-code-bg: #2a2a2a;
+    --inline-code-border: #363636;
 
     /* 表格 */
     --table-border-color: #595959;
