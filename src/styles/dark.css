@@ -2,26 +2,25 @@
     --page-bg: #1e1e1e;
     --page-text: #d4d4d4;
     --card-bg: #2d2d2d;
-    --card-border: #5a4e3a;
+    --card-border: #31302e;
     --card-shadow: rgba(0, 0, 0, 0.3);
     --title-color: #d4d4d4;
     --link-color: #d4d4d4;
     --title-link-hover: #e74c3c;
     --icon-link-hover: #d4d4d4;
-    --border-color: #5a4e3a;
-    --muted-color: #808080;
+    --border-color: #31302e;
     --quote-color: #808080;
-    --quote-border-color: #5a4e3a;
-    --avatar-border: #5a4e3a;
+    --quote-border-color: #31302e;
+    --avatar-border: #31302e;
     --toggle-color: #808080;
 
     /* 顶栏 */
     --topbar-bg: #1e1e1e;
-    --topbar-border: #5a4e3a;
+    --topbar-border: #31302e;
 
     /* 目录侧栏 */
     --toc-bg: #232323;
-    --toc-border: #5a4e3a;
+    --toc-border: #31302e;
     --toc-heading-color: #d4d4d4;
     --toc-link-color: #a0a0a0;
     --toc-active-color: #d4d4d4;
@@ -40,8 +39,8 @@
     --inline-code-border: #444c56;
 
     /* 表格 */
-    --table-border-color: #5a4e3a;
-    --table-header-bg: #2d2d2d;
+    --table-border-color: #595959;
+    --table-header-bg: #333333;
 
     /* 目录遮挡层 */
     --toc-overlay-bg: rgba(0, 0, 0, 0.7);

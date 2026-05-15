@@ -217,7 +217,7 @@ html {
 
 body {
     margin: 0;
-    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
     background: var(--page-bg);
     color: var(--page-text);
     line-height: 1.6;
@@ -393,7 +393,7 @@ img {
 }
 
 .post-body table tr {
-    border: 1px solid var(--table-border-color);
+    border: 2px solid var(--table-border-color);
     margin: 0;
     padding: 0;
 }
@@ -405,14 +405,14 @@ img {
 
 .post-body table th {
     font-weight: bold;
-    border: 1px solid var(--table-border-color);
+    border: 2px solid var(--table-border-color);
     border-bottom-width: 0.125rem;
     margin: 0;
     padding: 0.375rem 0.8125rem;
 }
 
 .post-body table td {
-    border: 1px solid var(--table-border-color);
+    border: 2px solid var(--table-border-color);
     margin: 0;
     padding: 0.375rem 0.8125rem;
 }
@@ -483,31 +483,28 @@ img {
 .post-body h1 {
     font-size: 2.25rem;
     line-height: 1.2;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .post-body h2 {
-    font-size: 1.75rem;
+    font-size: 2rem;
     line-height: 1.225;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .post-body h3 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     line-height: 1.43;
 }
 
 .post-body h4 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
 }
 
 .post-body h5 {
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .post-body h6 {
-    font-size: 1rem;
-    color: var(--muted-color);
+    font-size: 1.1rem;
 }
 
 /* ── 分割线 ──────────────────────────────────── */
