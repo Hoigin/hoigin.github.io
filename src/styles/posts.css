@@ -439,6 +439,10 @@ img {
     margin: 0.4rem 0;
 }
 
+.post-body li > p {
+    margin: 0;
+}
+
 .post-body li > ol,
 .post-body li > ul {
     margin: 0 0;
