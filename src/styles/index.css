@@ -1,3 +1,13 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 601px) {
+    html {
+        font-size: 18px;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -131,7 +141,7 @@ body {
 .post-title {
     flex: 1;
     min-width: 0;
-    color: var(--link-color);
+    color: var(--title-color);
     font-weight: bold;
     line-height: 1.6;
 }

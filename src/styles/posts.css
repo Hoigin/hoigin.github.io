@@ -82,6 +82,13 @@
     padding: 0.75rem 0;
 }
 
+.toc-sidebar ul,
+.toc-sidebar ol {
+    padding-left: 2rem;
+    margin: 0;
+    list-style: none;
+}
+
 body.toc-open .toc-sidebar {
     transform: translateX(0);
 }
@@ -154,6 +161,17 @@ body.toc-open .post-wrapper {
     }
 }
 
+@media (min-width: 1201px) {
+    .toc-sidebar {
+        width: 320px;
+        transform: translateX(-320px);
+    }
+
+    body.toc-open .post-wrapper {
+        margin-left: 320px;
+    }
+}
+
 /* ── 目录项 ────────────────────────────────── */
 
 .toc-title {
@@ -167,7 +185,7 @@ body.toc-open .post-wrapper {
 
 .toc-item {
     display: block;
-    padding: 0.4rem 0 0.4rem 0;
+    padding: 0.4rem 0.5rem 0.4rem 0.5rem;
     color: var(--toc-link-color);
     text-decoration: none;
     font-size: 0.9rem;
@@ -186,6 +204,16 @@ body.toc-open .post-wrapper {
 }
 
 /* ── 文章通用样式（与主题无关） ─────────────────── */
+
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 601px) {
+    html {
+        font-size: 18px;
+    }
+}
 
 body {
     margin: 0;
