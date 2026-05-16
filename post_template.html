@@ -7,6 +7,8 @@
 
     {{MATHJAX_CSS}}
 
+    <link rel="stylesheet" href="../../src/font-family/open-sans.css">
+
     <!-- 文章通用样式（始终生效） -->
     <link rel="stylesheet" href="../../src/styles/posts.css">
 
@@ -78,14 +80,16 @@
         setIcon(isDark ? sunPath : moonPath);
         localStorage.setItem('theme', isDark ? 'light' : 'dark');
 
+        const mermaidFont = '"Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif';
+
         // 切换主题时重新渲染 Mermaid 图表
         if (typeof mermaid !== 'undefined') {
-            const newTheme = isDark ? 'default' : 'dark';
+            const mermaidTheme = isDark ? 'default' : 'dark';
             document.querySelectorAll('.mermaid').forEach(el => {
                 el.removeAttribute('data-processed');
                 el.innerHTML = el.getAttribute('data-original');
             });
-            mermaid.initialize({ startOnLoad: false, theme: newTheme });
+            mermaid.initialize({ startOnLoad: false, theme: mermaidTheme, themeVariables: { fontFamily: mermaidFont } });
             mermaid.run();
         }
     });
