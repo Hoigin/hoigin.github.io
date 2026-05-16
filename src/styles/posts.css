@@ -217,7 +217,7 @@ html {
 
 body {
     margin: 0;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: "Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
     background: var(--page-bg);
     color: var(--page-text);
     line-height: 1.6;

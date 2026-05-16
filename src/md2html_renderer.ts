@@ -488,7 +488,8 @@ export function renderMarkdown(filePath: string): string {
         s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
         s.onload = () => {
             const theme = saved === 'dark' ? 'dark' : 'default';
-            mermaid.initialize({ startOnLoad: false, theme });
+            const font = '"Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif';
+            mermaid.initialize({ startOnLoad: false, theme, themeVariables: { fontFamily: font } });
             mermaid.run();
         };
         document.head.appendChild(s);

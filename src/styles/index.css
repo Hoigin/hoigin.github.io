@@ -12,7 +12,7 @@ html {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Microsoft YaHei", sans-serif;
+    font-family: "Open Sans", "Microsoft YaHei", sans-serif;
 }
 
 .header {
@@ -56,7 +56,7 @@ html {
 
 .state {
     color: var(--quote-color);
-    font-family: "STKaiTi", "KaiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-family: "Times New Roman", "Open Sans", "STKaiTi", "KaiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
     font-size: 1.25rem;
 }
 
