@@ -452,8 +452,13 @@ export function renderMarkdown(filePath: string): string {
     const titleMatch = mdContent.match(/^#\s+(.+)$/m);
     const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
 
+    // CommonMark 规范中 [text](url) 的 URL 遇空格即终止，
+    // 含空格的 URL 需用尖括号 [text](<url>) 包裹。
+    // 此预处理自动为含空格的内联链接 URL 添加尖括号，兼容 Typora 的行为。
+    const processedContent = mdContent.replace(/\]\((?!<)([^)\s][^)]*?\s[^)]*?)\)/g, '](<$1>)');
+
     const env: Record<string, any> = {};
-    const htmlContent = md.render(mdContent, env);
+    const htmlContent = md.render(processedContent, env);
 
     // Typora 下载的网络图片保存为 URL 编码文件名（如 https%3A%2F%2F...webp），
     // 但浏览器解码 src 中的 %3A → :、%2F → /，把本地路径变成远程 URL 导致图片无法加载。
