@@ -33,5 +33,3 @@
 无缝衔接 Typora 用户的写作习惯，原生支持 `==高亮==` (Highlight)、`^上标^` (Superscript) 与 `~下标~` (Subscript) 等扩展语法。
 
 ## 🚀 快速开始 (Getting Started)
-
-*(此处可补充您的项目安装和本地运行指南)*

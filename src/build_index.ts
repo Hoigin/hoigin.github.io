@@ -1,73 +1,94 @@
 /**
  * build_index.ts — 博客文章列表构建脚本
  *
- * 功能：读取 posts.json 中的文章列表，生成 HTML 列表片段替换
- *       index_template.html 中的 {{POST_LIST}}，输出最终的 index.html。
+ * 功能：扫描 ./posts/ 下的日期子目录，读取每个目录中的 meta.yaml 元数据，
+ *       生成 HTML 列表片段替换 index_template.html 中的 {{POST_LIST}}，
+ *       输出最终的 index.html。
  *
  * 运行方式：npx tsx src/build_index.ts
  */
 
 import fs from 'fs';
 import path from 'path';
+import yaml from 'js-yaml';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, '..');
+const POSTS_DIR = path.join(ROOT_DIR, 'posts');
 const TEMPLATE_FILE = path.join(ROOT_DIR, 'index_template.html');
 const OUTPUT_FILE = path.join(ROOT_DIR, 'index.html');
 
-interface PostEntry {
+interface PostMeta {
     title: string;
     date: string;
-    file: string;
     github?: string;
     tags?: string[];
 }
 
 /**
- * 读取 posts.json 并解析为文章列表。
+ * 扫描 posts 目录，读取每个子目录中的 meta.yaml，按日期倒序收集文章信息。
  */
-function loadPosts(): PostEntry[] {
-    const postsFile = path.join(ROOT_DIR, 'posts.json');
-    if (!fs.existsSync(postsFile)) {
-        console.error('posts.json 不存在，无法构建。');
-        process.exit(1);
+function scanPosts(): Array<{ title: string; date: string; link: string }> {
+    if (!fs.existsSync(POSTS_DIR)) {
+        console.warn('posts 目录不存在，跳过文章列表生成。');
+        return [];
     }
-    const raw = fs.readFileSync(postsFile, 'utf-8');
-    try {
-        return JSON.parse(raw) as PostEntry[];
-    } catch (e) {
-        console.error('posts.json 格式错误：', e);
-        process.exit(1);
-    }
-}
 
-/**
- * 校验文章列表的必填字段和引用文件是否存在。
- * 仅输出警告，不终止构建（允许草稿条目）。
- */
-function validatePosts(posts: PostEntry[]): void {
-    for (const post of posts) {
-        if (!post.title) {
-            console.warn(`posts.json: 缺少 title 字段 — ${JSON.stringify(post)}`);
-        }
-        if (!post.date) {
-            console.warn(`posts.json: 缺少 date 字段 — ${JSON.stringify(post)}`);
-        }
-        if (post.date && !/^\d{4}-\d{2}-\d{2}$/.test(post.date)) {
-            console.warn(`posts.json: date 格式应为 YYYY-MM-DD — "${post.date}" (file: ${post.file})`);
-        }
-        if (!post.file) {
-            console.warn(`posts.json: 缺少 file 字段 — ${JSON.stringify(post)}`);
+    const posts: Array<{ title: string; date: string; link: string }> = [];
+
+    for (const entry of fs.readdirSync(POSTS_DIR)) {
+        const entryPath = path.join(POSTS_DIR, entry);
+        if (!fs.statSync(entryPath).isDirectory()) continue;
+
+        const metaFile = path.join(entryPath, 'meta.yaml');
+        if (!fs.existsSync(metaFile)) {
+            console.warn(`目录 ${entry} 下缺少 meta.yaml，跳过。`);
             continue;
         }
-        const filePath = path.join(ROOT_DIR, post.file);
-        if (!fs.existsSync(filePath)) {
-            console.warn(`posts.json: 引用的文件不存在 — ${post.file}`);
+
+        const meta = yaml.load(fs.readFileSync(metaFile, 'utf-8')) as PostMeta;
+
+        if (!meta.title) {
+            console.warn(`meta.yaml (${entry}): 缺少 title 字段，跳过。`);
+            continue;
+        }
+        if (!meta.date) {
+            console.warn(`meta.yaml (${entry}): 缺少 date 字段，跳过。`);
+            continue;
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) {
+            console.warn(`meta.yaml (${entry}): date 格式应为 YYYY-MM-DD — "${meta.date}"，跳过。`);
+            continue;
+        }
+
+        // 查找目录下的 .html 文件作为文章链接
+        const htmlFiles = fs.readdirSync(entryPath)
+            .filter(f => f.endsWith('.html') && fs.statSync(path.join(entryPath, f)).isFile());
+
+        if (htmlFiles.length === 0) {
+            console.warn(`目录 ${entry} 下没有 .html 文件，跳过。`);
+            continue;
+        }
+
+        // 一个目录下可能有多个 .html 文件，每个都生成一条文章条目
+        // 如果只有一个 .html 文件，则用 meta.yaml 的标题和日期
+        // 如果有多个，则用同一个 meta 的标题和日期，链接指向各自的 .html
+        for (const htmlFile of htmlFiles) {
+            const relativeLink = path.join('posts', entry, htmlFile).split(path.sep).join('/');
+            posts.push({
+                title: meta.title,
+                date: meta.date,
+                link: `./${relativeLink}`,
+            });
         }
     }
+
+    posts.sort((a, b) => b.date.localeCompare(a.date));
+
+    return posts;
 }
 
 /**
@@ -108,20 +129,10 @@ function build(): void {
         process.exit(1);
     }
 
-    const posts = loadPosts();
-    validatePosts(posts);
-
-    posts.sort((a, b) => b.date.localeCompare(a.date));
-
-    const postsForHTML = posts.map(post => ({
-        title: post.title,
-        date: post.date,
-        link: `./${post.file}`,
-    }));
-
+    const posts = scanPosts();
     const templateContent = fs.readFileSync(TEMPLATE_FILE, 'utf-8');
     const indent = getPlaceholderIndent(templateContent);
-    const listHTML = generateListHTML(postsForHTML, indent);
+    const listHTML = generateListHTML(posts, indent);
     const outputContent = templateContent.replace(/^\s*{{POST_LIST}}/m, listHTML);
 
     fs.writeFileSync(OUTPUT_FILE, outputContent, 'utf-8');
