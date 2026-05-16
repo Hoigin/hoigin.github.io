@@ -45,7 +45,7 @@
     </blockquote>
     <hr>
     <h2 id="项目背景和目标">🚀项目背景和目标</h2>
-    <p>在<a href="https://hoigin.cn/post/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>中已经用 Flask 框架搭建好了一个个人博客网站。网站的首页展示文章列表，点击文章后进入独立的 HTML 页面。这些文章都由 Typora 生成，为纯静态 HTML 文件。接下来可以对网站功能进一步优化，本文档聚焦于实现以下三个功能：</p>
+    <p>在<a href="https://hoigin.github.io/posts/20251109/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8.html">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>中已经用 Flask 框架搭建好了一个个人博客网站。网站的首页展示文章列表，点击文章后进入独立的 HTML 页面。这些文章都由 Typora 生成，为纯静态 HTML 文件。接下来可以对网站功能进一步优化，本文档聚焦于实现以下三个功能：</p>
     <ol>
         <li>用户可以在网站首页点击按钮切换深色/浅色模式，并且此状态保存到 <code>localStorage</code> 变量中实现全局同步。也就是说，首页和文章页保持一致的显示模式。此外，还要保证深色模式下打开文章页没有白屏闪烁，保证用户体验。</li>
         <li>构建一个安全高效的线上请求监测系统，将网站访客的流量特征记录到日志中，并用 <code>cron</code> 工具实现自动化管理。这一功能既可以用于网站的日常调试，也可以用来观察网站的访客特征。</li>
@@ -54,7 +54,7 @@
     <hr>
     <h2 id="深浅色切换">🌗深浅色切换</h2>
     <h4 id="首页添加深浅色切换按钮">首页添加深浅色切换按钮</h4>
-    <p>在 HTML 模板中添加深浅色切换按钮之前，需要先回顾以下 Flask 应用的响应逻辑，从<a href="https://hoigin.cn/post/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>中将这部分代码摘抄如下：</p>
+    <p>在 HTML 模板中添加深浅色切换按钮之前，需要先回顾以下 Flask 应用的响应逻辑，从<a href="https://hoigin.github.io/posts/20251109/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8.html">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>中将这部分代码摘抄如下：</p>
     <div class="post-code-block">
         <span class="post-code-lang">python</span>
         <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
@@ -639,7 +639,7 @@
     <hr>
     <h2 id="访客记录">📒访客记录</h2>
     <h3 id="设置自定义日志格式">设置自定义日志格式</h3>
-    <p>根据<a href="https://hoigin.cn/post/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>，nginx 的配置文件放置在 <code>/etc/nginx/</code> 路径下。树莓派上运行的 Debian 系统约定：</p>
+    <p>根据<a href="https://hoigin.github/posts/20251109/%E7%94%A8%E6%A0%91%E8%8E%93%E6%B4%BE%E6%89%98%E7%AE%A1%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E7%BD%91%E7%AB%99%EF%BC%88%E4%B8%80%EF%BC%89%EF%BC%9A%E6%90%AD%E5%BB%BA%E5%92%8C%E9%83%A8%E7%BD%B2Web%E5%BA%94%E7%94%A8">「用树莓派托管个人博客网站（一）：搭建和部署Web应用」</a>，nginx 的配置文件放置在 <code>/etc/nginx/</code> 路径下。树莓派上运行的 Debian 系统约定：</p>
     <ul>
         <li><code>/etc/nginx/sites-available/</code>：存放所有可用的站点配置</li>
         <li><code>/etc/nginx/sites-enabled/</code>：存放已启用的站点配置（通过软链接激活）</li>
@@ -1111,7 +1111,7 @@
                 同步完成！</code></pre>
         </div>
     </div>
-    <p>输出一切正常，同步成功！需要注意的是，为了让同步完全自动化，建立 SSH 连接可以采用密钥对的登录方式，而不是用密码。配置此登录方式的方法参见<a href="http://localhost:5501/posts/20260101/Cloudflare%20Tunnel%20+%20SSH%20%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%8C%87%E5%8D%97.html">「Cloudflare Tunnel + SSH 内网穿透指南」</a>。</p>
+    <p>输出一切正常，同步成功！需要注意的是，为了让同步完全自动化，建立 SSH 连接可以采用密钥对的登录方式，而不是用密码。配置此登录方式的方法参见<a href="https://hoigin.github.io/posts/20260101/Cloudflare%20Tunnel%20+%20SSH%20%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%8C%87%E5%8D%97.html">「Cloudflare Tunnel + SSH 内网穿透指南」</a>。</p>
             </article>
         </div>
     </div>
