@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows个人电脑部署开源围棋AI模型KataGo</title>
+
+    
+
+    <link rel="stylesheet" href="../../src/font-family/open-sans.css">
+
+    <!-- 文章通用样式（始终生效） -->
+    <link rel="stylesheet" href="../../src/styles/posts.css">
+
+    <!-- highlight.js 主题：浅色 / 深色，与博客主题同步切换 -->
+    <link rel="stylesheet" id="hljsLight" href="../../src/styles/stackoverflow-light.min.css" media="not all">
+    <link rel="stylesheet" id="hljsDark" href="../../src/styles/stackoverflow-dark.min.css" media="all">
+
+    <!-- 博客主题：浅色 / 深色 -->
+    <link rel="stylesheet" id="themeLight" href="../../src/styles/light.css" media="not all">
+    <link rel="stylesheet" id="themeDark" href="../../src/styles/dark.css" media="all">
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <a id="home-link" href="../../index.html" aria-label="返回主页">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg>
+            </a>
+            <button id="toc-toggle" aria-label="展开目录">
+                <svg viewBox="0 0 16 16"><path d="M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z"/></svg>
+            </button>
+        </div>
+        <button id="theme-toggle" aria-label="切换主题">
+            <svg viewBox="0 0 16 16"><path d="M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z"></path></svg>
+        </button>
+    </div>
+    <div class="page-body">
+        <nav class="toc-sidebar" id="toc-sidebar"></nav>
+        <div class="toc-overlay" id="toc-overlay"></div>
+        <div class="post-wrapper">
+            <article class="post-body">
+                <h1 id="windows个人电脑部署开源围棋ai模型katago">Windows个人电脑部署开源围棋AI模型KataGo</h1>
+    <h2 id="背景与目标">🚀 背景与目标</h2>
+    <p>传统纯 Windows 部署方式缺乏统一的包管理机制，手动配置 CUDA、cuDNN 和推理后端极易出错。本文采用 WSL（Windows Subsystem for Linux）+ Ubuntu 24.04 + TensorRT 的组合方案，在保留 Windows 图形界面体验的同时，利用 Linux 成熟的深度学习生态，实现 KataGo 的高性能 GPU 加速推理。目标是在一台配备 RTX 4060 笔记本电脑（8GB 显存、32GB 内存）上，稳定运行 <code>b28c512</code> 模型，并通过 Sabaki 提供流畅的图形化对局与分析功能。</p>
+    <h2 id="关键组件与作用">🧩 关键组件与作用</h2>
+    <h3 id="wsl">WSL</h3>
+    <p>本文采用 WSL 来部署 KataGo，其 Linux 发行版是 Ubuntu 24.04，原因在于 Windows 没有统一的包管理系统，所以每一步都要手动操作，相当麻烦。而 Linux 系统则方便得多，以下是两者在部署过程中各环节的对比。</p>
+    <table>
+        <thead>
+            <tr>
+                <th><strong>环节</strong></th>
+                <th><strong>Windows</strong></th>
+                <th><strong>Linux</strong></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>驱动安装</strong></td>
+                <td>必须先装 NVIDIA 官方 <code>.exe</code> 驱动</td>
+                <td>可通过 <code>ubuntu-drivers</code> 自动推荐并安装</td>
+            </tr>
+            <tr>
+                <td><strong>CUDA Toolkit 安装</strong></td>
+                <td>下载 <code>.exe</code> 或 <code>.zip</code>，手动运行安装程序</td>
+                <td>一条命令：<code>sudo apt install cuda-toolkit-12-8</code></td>
+            </tr>
+            <tr>
+                <td><strong>环境变量设置</strong></td>
+                <td>需手动添加 <code>PATH</code> 和 <code>CUDA_PATH</code> 到系统变量</td>
+                <td>包管理器自动配置 <code>/etc/environment</code></td>
+            </tr>
+            <tr>
+                <td><strong>库依赖管理</strong></td>
+                <td>DLL 文件需手动放置或注册</td>
+                <td><code>apt</code> 自动解决所有依赖（如 cuBLAS, cuDNN）</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>此外，整个人工智能和科学计算的生态都是围绕 POSIX 和包管理构建的，绝大多数从事深度学习研究、开发和部署的专业人员都使用 Linux 或 macOS，所以考虑到未来的程序兼容性，使用 WSL 部署 KataGo 方便之后部署和管理更多的相关开源项目。WSL 不是传统虚拟机，因此其性能损失不大，尤其在 GPU 加速场景下，它的性能损耗极小，通常小于5%，所以不用担心在 WSL 上部署 Katago 导致严重的性能损失。</p>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>POSIX（Portable Operating System Interface）是一组由 IEEE 制定的操作系统接口标准，目的是让软件能在不同 Unix-like 系统上无需修改即可编译运行。</p>
+    </div>
+    <p>总之，WSL 提供 Linux 运行环境，用于安装 KataGo、TensorRT 和模型文件。其优势在于，无需双系统，并且兼容 Windows 文件系统（通过 <code>/mnt/</code> 挂载）；其限制在于后续需手动配置路径和权限，避免因跨系统权限问题导致模型无法运行。</p>
+    <h3 id="tensorrt">TensorRT</h3>
+    <p>TensorRT是 NVIDIA 官方提供的深度学习推理加速库。KataGo v1.16.4 是第一个明确支持 CUDA 12.8 + TensorRT 的版本，在 <a href="https://github.com/lightvector/KataGo#opencl-vs-cuda-vs-tensorrt-vs-eigen">KataGo 开源项目主页</a> 上提到使用 TensorRT 可以获得更高推理速度和更低延迟。</p>
+    <blockquote>
+        <p>TensorRT is similar to CUDA, but only uses NVIDIA’s TensorRT framework to run the neural network with more optimized kernels. For modern NVIDIA GPUs, it should work whenever CUDA does and will usually be faster than CUDA or any other backend.</p>
+    </blockquote>
+    <p>相较于使用传统的 cuDNN 工具，TensorRT 采用了自动融合层、精度校准、内核调优等模型优化技术，在推理过程中，可以提升推理速度并降低显存占用。对于 KataGo 而言，使用 TensorRT 可以提升每步棋的 MCTS 次数。</p>
+    <h3 id="katago-程序">KataGo 程序</h3>
+    <p>KataGo 是目前最先进的开源围棋人工智能系统之一，其强大性能来源于深度神经网络和蒙特卡洛树搜索（MCTS）的结合。</p>
+    <ol>
+        <li>
+            <p>神经网络（Neural Network）的作用是输入当前棋盘局面，包括棋盘上黑白子分布信息、历史信息等，输出两个预测（事实上不止两个，但下边的两个是最重要的）：</p>
+            <ul>
+                <li>
+                    <p>策略头（Policy Head）：预测每一步的「合理着法概率」（例如 D4 有 30% 概率是最优）</p>
+                </li>
+                <li>
+                    <p>价值头（Value Head）：预测当前局面的「胜率」（例如黑方胜率 52.3%）</p>
+                </li>
+            </ul>
+            <p>这个神经网络就是通过权重文件（如 <code>katago-b28c512.bin</code>）定义的。</p>
+        </li>
+        <li>
+            <p>蒙特卡洛树搜索（MCTS）的作用是利用神经网络的输出，在可能的走法空间中进行探索。这种探索不是暴力穷举，而是：</p>
+            <ul>
+                <li>优先探索高概率着法（来自策略头）</li>
+                <li>动态评估局面优劣（来自价值头）</li>
+                <li>逐步构建一棵「搜索树」，最终选择访问次数最多或胜率最高的着法</li>
+            </ul>
+            <p>MCTS 是由 KataGo 程序本身实现的算法逻辑，不依赖权重文件。</p>
+        </li>
+    </ol>
+    <p>这里所说的 KataGo 程序要负责实现 MCTS 搜索，加载神经网络并推理，处理 GTP 协议，并管理 GPU/CPU 资源等任务。KataGo 加载神经网络之后推理这一步可以利用上面提到 TensorRT 库来加速；而 KataGo 加载的神经网络则由下面提到的权重文件来定义。</p>
+    <h3 id="权重文件">权重文件</h3>
+    <p>KataGo 神经网络用于推理的权重文件，本文使用的是 <code>b28c512</code>。这个命名是 KataGo 模型命名中的一种架构标识符，它直接描述了该神经网络的结构规模。这个命名方式源自深度学习中对卷积神经网络（CNN）的常见表示方法，具体含义如下：</p>
+    <table>
+        <thead>
+            <tr>
+                <th>部分</th>
+                <th>含义</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>b28</code></td>
+                <td>28 个残差块（blocks）</td>
+                <td>表示神经网络主干由 28 层残差模块（Residual Blocks） 堆叠而成。层数越多，模型容量越大，能学习更复杂的围棋模式。</td>
+            </tr>
+            <tr>
+                <td><code>c512</code></td>
+                <td>每层 512 个通道（channels）</td>
+                <td>表示每个卷积层的特征图通道数为 512。通道数越多，模型能同时提取的特征维度越丰富，表达能力越强。</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>所以，<code>b28c512</code> 是一个28层512通道的卷积神经网络。神经网络权重文件，包含数亿个训练好的参数，决定了 KataGo 的策略和价值预测能力，决定了 AI 的实力上限。</p>
+    <div class="markdown-alert markdown-alert-note"><p class="markdown-alert-title"><svg class="octicon octicon-info" viewBox="0 0 16 16" width="16" height="16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>Note</p>
+        <p>一个深刻的问题是——<strong>KataGo 是否「认识」围棋规则？神经网络本身是否知道「不能自杀」、「要提子」、「什么是气」？</strong></p>
+        <p>从程序运行的角度来说，神经网络（权重文件）本身完全不知道规则，但 KataGo 程序会强制它在合法规则下运行。KataGo 的神经网络输入不是简单的黑白棋盘，而是 19×19×N 的多通道特征图，包括：</p>
+        <ul>
+            <li>当前黑子/白子位置</li>
+            <li>最近几步的历史落子</li>
+            <li>「气」的数量（liberties）</li>
+            <li>打劫位置标记</li>
+            <li>禁止自杀区域（通过「legal move mask」预处理）</li>
+        </ul>
+        <p>除此之外，在蒙特卡洛树搜索（MCTS）过程中，KataGo 程序会：</p>
+        <ul>
+            <li>
+                <p>让神经网络预测所有 361 个点的策略概率（包括非法点）</p>
+            </li>
+            <li>
+                <p>立即用围棋规则引擎过滤掉非法着法，例如：</p>
+                <ul>
+                    <li>
+                        <p>排除已有子的位置</p>
+                    </li>
+                    <li>
+                        <p>排除自杀着法（无气且不提子）</p>
+                    </li>
+                    <li>
+                        <p>排除违反打劫规则</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>总之，KataGo 程序只在合法着法集合中进行搜索和选择下一步。神经网络的输出的一步棋有可能是非法点，但 KataGo 程序绝不允许它真的下出来。然而，事实上神经网络不仅懂规则，而且还会很多高级技巧，比如「做眼」、「弃子争先」等。**这正是深度学习的神奇之处！**就好像人类小孩学语言，他们不需要专门学习语法，却能学会符合语法的语言。</p>
+    </div>
+    <h3 id="sabaki">Sabaki</h3>
+    <p>Sabaki 是一款优雅的图形化围棋界面，通过 GTP 协议调用 WSL 中的 KataGo 引擎。我们可以在 WSL 中运行 KataGo 引擎，同时在 Windows 原生的 Sabaki 图形界面中调用它并显示结果，实现对局与分析。实现这一点的关键机制是通过 <code>wsl</code> 命令启动 Linux 子系统，并传递 KataGo 的启动参数。</p>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>GTP（Go Text Protocol）是围棋程序与 GUI 程序之间进行通信的一种标准文本协议。它的设计目标是提供一种简单、通用的方式，让围棋 AI 引擎能够与前端界面交互。</p>
+    </div>
+    <hr>
+    <h2 id="部署步骤详解">🛠️ 部署步骤详解</h2>
+    <h3 id="安装-cuda-工具包">安装 CUDA 工具包</h3>
+    <p>首先运行以下命令，查看 GPU 型号、驱动版本、显存使用量、温度、功耗、利用率等信息。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 打开 NVIDIA System Management Interface</span>
+                nvidia-smi</code></pre>
+        </div>
+    </div>
+    <p>注意这里显示的 CUDA 版本不是安装的 CUDA Toolkit 版本，而是显卡驱动最高能支持的 CUDA Toolkit 版本。可以采用以下命令来查看已安装的 CUDA Toolkit 版本：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">nvcc --version</code></pre>
+        </div>
+    </div>
+    <p>如果发现尚未安装 CUDA Toolkit，则按照以下步骤来添加 NVIDIA 官方 APT 下载源。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 下载 GPG 密钥</span>
+                wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+                <span class="hljs-built_in">sudo</span> <span class="hljs-built_in">mv</span> cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+                
+                <span class="hljs-comment"># 添加仓库密钥</span>
+                <span class="hljs-comment"># 把所有第三方密钥都放进一个全局信任库 /etc/apt/trusted.gpg</span>
+                <span class="hljs-built_in">sudo</span> apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/3bf863cc.pub
+                
+                <span class="hljs-comment"># 添加仓库</span>
+                <span class="hljs-comment"># Ubuntu 官方软件源配置文件放在 /etc/apt/sources.list 中</span>
+                <span class="hljs-comment"># 第三方软件源配置文件一般放在 /etc/apt/sources.list.d/ 中</span>
+                <span class="hljs-comment"># 注意：WSL 用户必须用 wsl-ubuntu 仓库！</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;deb https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/ /&quot;</span> | <span class="hljs-built_in">sudo</span> <span class="hljs-built_in">tee</span> /etc/apt/sources.list.d/cuda.list</code></pre>
+        </div>
+    </div>
+    <p>当从非官方 Ubuntu 仓库（比如 NVIDIA 的 CUDA 仓库）安装软件时，系统必须确认：这个软件真的是 NVIDIA 发布的（而不是被中间人篡改或伪造的）；软件在传输过程中没有被修改。这就是 GPG （GNU Privacy Guard key）签名验证的作用。NVIDIA 用他们的私钥对发布的 <code>.deb</code> 包和仓库元数据（如 <code>Packages.gz</code>）进行签名；用户系统需要拥有 NVIDIA 的公钥（即这里下载的 <code>3bf863cc.pub</code>），才能验证这些签名；如果签名验证失败（比如密钥不匹配、文件被篡改），<code>apt</code> 会拒绝安装，并报错 <code>GPG error</code>。在安装 Ubuntu 时，系统就预装了 Canonical（Ubuntu 背后公司）的官方公钥，存放在 <code>/etc/apt/trusted.gpg.d/ubuntu-keyring-*.gpg</code> 中，所以使用 <code>apt install</code> 命令下载安装官方软件时无需额外操作。但是，第三方仓库（如 Docker、Google Chrome、NVIDIA CUDA）不会预装在系统中，所以必须手动导入其公钥。</p>
+    <p>接着使用以下命令验证是否成功添加好了下载源：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">apt list -a cuda-toolkit-*</code></pre>
+        </div>
+    </div>
+    <p>理论上应该能看到类似这样的输出：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">text</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3</pre>
+            <pre data-indent="4"><code class="hljs">cuda-toolkit-12-8/unknown 12.8.0-1 amd64
+                cuda-toolkit-12-7/unknown 12.7.0-1 amd64
+                ...</code></pre>
+        </div>
+    </div>
+    <p>这说明下载源添加成功了。接下来查阅 <a href="https://github.com/lightvector/KataGo/releases/">KataGo 官方发行版</a> 所支持的 CUDA Toolkit 版本，截至撰写本文时是12.1-12.8，所以就安装最新版的吧。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs"><span class="hljs-built_in">sudo</span> apt install -y cuda-toolkit-12-8</code></pre>
+        </div>
+    </div>
+    <p>可以使用以下命令验证安装是否成功：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 查看 nvcc 版本（CUDA 编译器）</span>
+                /usr/local/cuda-12.8/bin/nvcc --version
+                
+                <span class="hljs-comment"># 若安装成功应输出：</span>
+                <span class="hljs-comment"># nvcc: NVIDIA (R) Cuda compiler release 12.8, V12.8.93</span>
+                
+                <span class="hljs-comment"># 还可以检查库文件是否存在</span>
+                <span class="hljs-built_in">ls</span> /usr/local/cuda-12.8/lib64/libcudart.so*</code></pre>
+        </div>
+    </div>
+    <p>如果一切正常的话，就说明 CUDA 环境准备就绪了。</p>
+    <h3 id="安装-tensorrt">安装 TensorRT</h3>
+    <p>由于网络环境或下载源的问题，使用命令安装 TensorRT 可能会找不到安装包，所以建议直接到 <a href="https://developer.nvidia.com/tensorrt-getting-started">TensorRT 主页</a> 上找对应的版本下载。</p>
+    <div class="markdown-alert markdown-alert-note"><p class="markdown-alert-title"><svg class="octicon octicon-info" viewBox="0 0 16 16" width="16" height="16"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>Note</p>
+        <p>可以在 WSL 中使用以下命令来查看 WSL 的版本：</p>
+        <div class="post-code-block">
+            <span class="post-code-lang">bash</span>
+            <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                <pre class="post-code-line-numbers" data-indent="5">1
+                    2</pre>
+                <pre data-indent="5"><code class="hljs"><span class="hljs-comment"># Linux Standard Base</span>
+                    lsb_release -a</code></pre>
+            </div>
+        </div>
+        <p>LSB 是 Linux 基金会制订的一套标准，目的是让不同 Linux 发行版（如 Ubuntu、Debian、CentOS、Fedora 等）在二进制兼容性、文件系统结构、命令行为等方面保持一致。</p>
+    </div>
+    <p>由于我安装的 WSL 发行版是 Ubuntu 24.04，CUDA 工具包版本是12.8，并且查阅 <a href="https://github.com/lightvector/KataGo/releases/">KataGo 官方发行版</a> 所支持的 TensorRT 版本是10.9，所以下载 TensorRT 10.9 GA for Ubuntu 24.04 and CUDA 12.0 to 12.8 DEB local repo Package 这个安装包即可。接着在 WSL 终端中输入以下命令，将安装包移动至用户家路径中：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs"><span class="hljs-built_in">cp</span> <span class="hljs-string">&quot;/mnt/d/下载/nv-tensorrt-local-repo-ubuntu2404-10.9.0-cuda-12.8_1.0-1_amd64.deb&quot;</span> ~/</code></pre>
+        </div>
+    </div>
+    <p>接着进入用户家路径，运行命令：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 进入家目录</span>
+                <span class="hljs-built_in">cd</span> ~
+                
+                <span class="hljs-comment"># 安装本地仓库</span>
+                <span class="hljs-built_in">sudo</span> dpkg -i nv-tensorrt-local-repo-ubuntu2404-10.9.0-cuda-12.8_1.0-1_amd64.deb
+                
+                <span class="hljs-comment"># 导入 GPG 密钥</span>
+                <span class="hljs-built_in">sudo</span> <span class="hljs-built_in">cp</span> /var/nv-tensorrt-local-repo-*/nv-tensorrt-local-*.pub /etc/apt/trusted.gpg.d/
+                
+                <span class="hljs-comment"># 安装 tensorrt</span>
+                <span class="hljs-built_in">sudo</span> apt install -y tensorrt</code></pre>
+        </div>
+    </div>
+    <p>运行以下命令测试是否安装成功：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3</pre>
+            <pre data-indent="4"><code class="hljs">dpkg -l | grep tensorrt
+                
+                <span class="hljs-comment"># 应显示: ii  tensorrt  10.9.0.x-1+cuda12.8 ...</span></code></pre>
+        </div>
+    </div>
+    <h3 id="配置-katago">配置 KataGo</h3>
+    <p>接下来在 <a href="https://github.com/lightvector/KataGo/releases/">KataGo 官方发行版</a> 页面下载之前选好的版本，然后用同样的方法将安装包转移到用户家路径中并安装：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-built_in">cp</span> <span class="hljs-string">&quot;/mnt/d/下载/katago-v1.16.4-trt10.9.0-cuda12.8-linux-x64.zip&quot;</span> ~/katago/
+                
+                <span class="hljs-comment"># 解压缩</span>
+                unzip katago-v1.16.4-trt10.9.0-cuda12.8-linux-x64.zip
+                
+                <span class="hljs-comment"># 添加执行权限</span>
+                <span class="hljs-built_in">chmod</span> u+x katago</code></pre>
+        </div>
+    </div>
+    <p>检查是否安装成功：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">./katago version</code></pre>
+        </div>
+    </div>
+    <p>若安装成功应该可以看到 KataGo 的版本号等信息。</p>
+    <p>下一步，访问 <a href="https://katagotraining.org/networks/">KataGo 开源项目的权重文件列表页面</a> ，找到当前实力最强的权重文件（截至撰写本文时，最强的模型 ELo 等级分超过14000，其评分基准是一个随机数生成器），然后将其连接复制下来，在 WSL 终端下载到 KataGo 模型的安装路径 <code>~/katago/</code> 中：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 进入 katago 路径</span>
+                <span class="hljs-built_in">cd</span> ~/katago/
+                
+                <span class="hljs-comment"># 下载权重文件</span>
+                wget https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b28c512nbt-adam-s11165M-d5387M.bin.gz
+                
+                <span class="hljs-comment"># 解压文件</span>
+                gunzip kata1-b28c512nbt-adam-s11165M-d5387M.bin.gz
+                
+                <span class="hljs-comment"># 重命名文件</span>
+                <span class="hljs-comment"># 改一个简单的名字，方便后续配置</span>
+                <span class="hljs-built_in">mv</span> kata1-b28c512nbt-adam-s11165M-d5387M.bin katago-b28c512.bin</code></pre>
+        </div>
+    </div>
+    <p>接着就可以运行 KataGo 了，输入以下命令：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># -config default_gtp.cfg 显式指定配置参数</span>
+                ./katago benchmark -model katago-b28c512.bin -config default_gtp.cfg</code></pre>
+        </div>
+    </div>
+    <p>因为前面下载的是 AppImage 封装的 KataGo，即从 GitHub Releases 下载的 <code>.zip</code> 解压后得到的 <code>katago</code> 文件，它被设计为「自包含」运行，默认会去自己的虚拟挂载路径下找 <code>default_gtp.cfg</code>，但在 WSL 中这个机制失效了，所以需要显式指定配置参数。</p>
+    <p>首次运行所需时间较长，需要耐心等待。</p>
+    <p>运行结果输出的是 KataGo 的基准测试（benchmark）日志，反映了当前算力是否能跑 b28c512 模型，以及模型运行速度和实战水平。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">text</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">TensorRT backend thread 0: Found GPU NVIDIA GeForce RTX 4060 Laptop GPU memory 8585216000 compute capability major 8 minor 9</code></pre>
+        </div>
+    </div>
+    <p>这一段说明 KataGo 成功检测到 GPU 型号是 NVIDIA GeForce RTX 4060 Laptop，显存大小是 <code>8585216000</code> 字节，约等于 8.58 GB（实际可用约 8GB），<code>compute capability major 8 minor 9</code> 说明属于 GPU 属于 Ampere 架构（RTX 30/40 系列）。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">text</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3</pre>
+            <pre data-indent="4"><code class="hljs">Saved new timing cache to /home/hoigin_ubuntu/.katago/trtcache/...
+                TensorRT backend thread 0: Model version 15 useFP16 = true
+                Model name: kata1-b28c512nbt-adam-s11165M-d5387M</code></pre>
+        </div>
+    </div>
+    <p>这一段说明 TensorRT 成功 GPU 编译了模型的推理缓存（timing cache），并启用了 FP16 半精度计算。这里没有报错，就说明显存足够，模型可以在 RTX4060 上正常运行。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">text</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8</pre>
+            <pre data-indent="4"><code class="hljs">Ordered summary of results:
+                
+                numSearchThreads =  5: 10 / 10 positions, visits/s = 439.11 nnEvals/s = 367.07 nnBatches/s = 146.32 avgBatchSize = 2.51 (18.3 secs) (EloDiff baseline)
+                numSearchThreads =  8: 10 / 10 positions, visits/s = 505.58 nnEvals/s = 428.02 nnBatches/s = 106.00 avgBatchSize = 4.04 (16.0 secs) (EloDiff +41)
+                numSearchThreads = 10: 10 / 10 positions, visits/s = 554.99 nnEvals/s = 464.47 nnBatches/s = 86.81 avgBatchSize = 5.35 (14.6 secs) (EloDiff +70)
+                numSearchThreads = 12: 10 / 10 positions, visits/s = 579.97 nnEvals/s = 482.50 nnBatches/s = 71.66 avgBatchSize = 6.73 (14.0 secs) (EloDiff +80)
+                numSearchThreads = 16: 10 / 10 positions, visits/s = 576.18 nnEvals/s = 494.02 nnBatches/s = 57.06 avgBatchSize = 8.66 (14.1 secs) (EloDiff +63)
+                numSearchThreads = 20: 10 / 10 positions, visits/s = 597.46 nnEvals/s = 518.87 nnBatches/s = 42.91 avgBatchSize = 12.09 (13.7 secs) (EloDiff +64)</code></pre>
+        </div>
+    </div>
+    <p>这一段是 benchmark 的核心，即测试不同线程数（<code>numSearchThreads</code>）下的性能，重点关注以下字段：</p>
+    <table>
+        <thead>
+            <tr>
+                <th>字段</th>
+                <th>含义</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>visits/s</code></td>
+                <td>每秒访问次数，这是最重要的速度指标，直接影响分析深度</td>
+            </tr>
+            <tr>
+                <td><code>nnEvals/s</code></td>
+                <td>每秒神经网络评估次数，这反映了 GPU 推理吞吐量</td>
+            </tr>
+            <tr>
+                <td><code>avgBatchSize</code></td>
+                <td>平均批处理大小，越大越高效，但过高会降低 MCTS 质量</td>
+            </tr>
+            <tr>
+                <td><code>(XX.X secs)</code></td>
+                <td>完成 10 个测试局面的总耗时</td>
+            </tr>
+            <tr>
+                <td><code>EloDiff</code></td>
+                <td>相比默认状态（baseline，即5线程时的表现）的棋力提升</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>根据首次运行的结果，可以适当修改 <code>default_gtp.cfg</code> 中的配置参数，比如：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">ini</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 建议值（针对 RTX 4060 + b28c512）</span>
+                <span class="hljs-attr">numSearchThreads</span> = <span class="hljs-number">12</span>    <span class="hljs-comment"># 上面的测试结果表明12线程的 Elo 分值最高</span>
+                <span class="hljs-attr">maxVisits</span> = <span class="hljs-number">800</span>          <span class="hljs-comment"># 或根据你对速度/强度的偏好调整（600~2500）</span>
+                <span class="hljs-attr">pondering</span> = <span class="hljs-literal">false</span>        <span class="hljs-comment"># 对手落子时不启用后台思考（在 Sabaki 中有效）</span></code></pre>
+        </div>
+    </div>
+    <h3 id="在-sabaki-中连接-wsl-的-katago">在 Sabaki 中连接 WSL 的 KataGo</h3>
+    <p>在 Sabaki 中连接 WSL 的 KataGo，首先要注意文件读写权限问题。比如，Sabaki 启动 KataGo 时没有写权限，导致 KataGo 无法创建 <code>gtp_logs</code> 文件夹来记录日志，所以需要打开 <code>default_gtp.cfg</code> 文件修改权限，做如下更改：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">ini</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-attr">logAllGTPCommunication</span> = <span class="hljs-literal">false</span>  <span class="hljs-comment"># 避免因日志权限问题崩溃</span>
+                <span class="hljs-attr">logSearchInfo</span> = <span class="hljs-literal">false</span>
+                <span class="hljs-comment"># logDir = gtp_logs       # 注释掉或删除（避免创建目录失败）</span></code></pre>
+        </div>
+    </div>
+    <p>接着，在 PowerShell 中运行如下命令查看 WSL 发行版名称：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">powershell</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">wsl <span class="hljs-literal">-l</span> <span class="hljs-literal">-v</span></code></pre>
+        </div>
+    </div>
+    <p>然后记住输出的发行版名称，比如我这里是 <code>Ubuntu</code>。然后在 Windows 中打开 Sabaki ，点击添加引擎，在引擎配置中写：</p>
+    <ul>
+        <li>
+            <p><strong>Name</strong>: <code>KataGo TensorRT b28c512</code> （名字任意）</p>
+        </li>
+        <li>
+            <p><strong>Path</strong>: <code>wsl</code></p>
+        </li>
+        <li>
+            <p><strong>Arguments</strong>:</p>
+            <div class="post-code-block">
+                <span class="post-code-lang">text</span>
+                <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+                    <pre class="post-code-line-numbers" data-indent="6">1</pre>
+                        <pre><code class="hljs">-d Ubuntu -- /home/hoigin_ubuntu/katago/katago gtp -model /home/hoigin_ubuntu/katago/katago-b28c512.bin -config /home/hoigin_ubuntu/katago/default_gtp.cfg</code></pre>
+                </div>
+            </div>
+            <p>（<code>-d</code> 后面的 <code>Ubuntu</code> 就是前面输出的发行版名称，若不一样则需要替换）</p>
+        </li>
+        <li>
+            <p><strong>Initial commands</strong>: （留空）</p>
+        </li>
+    </ul>
+    <p>保存配置即可。最后，在左侧边栏启用引擎，验证连接。如果一切顺利，到这一步就可以开始使用 KataGo 了。</p>
+    <h2 id="性能实测">📊 性能实测</h2>
+    <p>在 WSL 中使用 <code>nvidia-smi</code> 命令查看 <code>Volatile GPU-Util</code>，可以看到 RTX 4060 显卡的显存占用率达到90%以上。另外，<code>Memory Usage</code> 显示为 <code>N/A</code>，这是因为 WSL2 的 GPU 虚拟化层不完整支持显存用量上报。如果打开任务管理器，也看不到显存的占用量，也许也是因为这个问题。</p>
+    <p>实测表明，12线程的配置下，显存占用率超过90%，GPU 温度升至接近70摄氏度，CPU 内存占用大约为6GB，在 Sabaki 中完全可以支持实时对弈。</p>
+    <img src="Windows个人电脑部署开源围棋AI模型KataGo.assets/image-20251127125742510.png" alt="image-20251127125742510" style="zoom:80%;" />
+    <hr>
+    <h2 id="总结">🎯 总结</h2>
+    <p>通过 WSL 构建 Linux 运行环境，结合 NVIDIA 官方 TensorRT 推理加速库，我们成功在 Windows 笔记本上部署了 KataGo 最强公开模型 <code>b28c512</code>，并通过 Sabaki 实现了无缝图形交互。整个过程的关键在于：使用 <code>.deb</code> 包精准安装匹配版本的 TensorRT，通过 <code>cp</code> 命令绕过网络下载限制获取 KataGo 与模型文件，关闭日志避免跨系统权限问题，以及依据 benchmark 结果优化线程与访问量配置。最终，RTX 4060 在 12 线程下实现约 580 visits/s 的推理速度，显存占用接近 8GB 上限但仍可稳定运行。此方案不仅验证了消费级笔记本运行顶级围棋 AI 的可行性，也为后续部署其他开源 AI 项目提供了可靠模板。</p>
+            </article>
+        </div>
+    </div>
+
+<script>
+
+    // ── 主题切换（与主页一致，默认深色） ──────────────────────────────
+    // 切换时同步刷新 Mermaid 图表主题：还原原始源码、移除 data-processed、
+    // 以新主题调用 mermaid.initialize() + mermaid.run() 重新渲染
+    const lightSheet = document.getElementById('themeLight');
+    const darkSheet = document.getElementById('themeDark');
+    const hljsLight = document.getElementById('hljsLight');
+    const hljsDark = document.getElementById('hljsDark');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    const sunPath = "M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z";
+    const moonPath = "M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z";
+
+    function setIcon(path) {
+        themeToggle.querySelector('svg path').setAttribute('d', path);
+    }
+
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+        lightSheet.media = 'all';
+        darkSheet.media = 'not all';
+        hljsLight.media = 'all';
+        hljsDark.media = 'not all';
+        setIcon(sunPath);
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = darkSheet.media === 'all';
+        lightSheet.media = isDark ? 'all' : 'not all';
+        darkSheet.media = isDark ? 'not all' : 'all';
+        hljsLight.media = isDark ? 'all' : 'not all';
+        hljsDark.media = isDark ? 'not all' : 'all';
+        setIcon(isDark ? sunPath : moonPath);
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+
+        const mermaidFont = '"Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif';
+
+        // 切换主题时重新渲染 Mermaid 图表
+        if (typeof mermaid !== 'undefined') {
+            const mermaidTheme = isDark ? 'default' : 'dark';
+            document.querySelectorAll('.mermaid').forEach(el => {
+                el.removeAttribute('data-processed');
+                el.innerHTML = el.getAttribute('data-original');
+            });
+            mermaid.initialize({ startOnLoad: false, theme: mermaidTheme, themeVariables: { fontFamily: mermaidFont } });
+            mermaid.run();
+        }
+    });
+
+
+
+    // ── 页面内跳转：定位到顶栏下方 ────────────────────────────────────
+    const topbar = document.querySelector('.topbar');
+
+    function scrollToBelowTopbar(target) {
+        const offset = topbar.getBoundingClientRect().height;
+        window.scrollTo({ behavior: 'smooth', top: target.getBoundingClientRect().top + window.scrollY - offset });
+    }
+
+    document.querySelectorAll('.post-body a[href^="#"]').forEach(link => {
+        link.addEventListener('click', e => {
+            const id = link.getAttribute('href').slice(1);
+            const target = document.getElementById(decodeURIComponent(id));
+            if (target) { e.preventDefault(); scrollToBelowTopbar(target); }
+        });
+    });
+
+    document.querySelectorAll('.footnote-backref').forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.getElementById(decodeURIComponent(link.getAttribute('href').slice(1)));
+            if (target) scrollToBelowTopbar(target);
+        });
+    });
+
+    // ── 目录生成与切换 ────────────────────────────────────────────────
+    const tocToggle = document.getElementById('toc-toggle');
+    const tocSidebar = document.getElementById('toc-sidebar');
+    const tocListPath = "M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z";
+    const tocClosePath = "M2.72 2.72a.75.75 0 011.06 0L8 6.94l4.22-4.22a.75.75 0 011.06 1.06L9.06 8l4.22 4.22a.75.75 0 01-1.06 1.06L8 9.06l-4.22 4.22a.75.75 0 01-1.06-1.06L6.94 8 2.72 3.78a.75.75 0 010-1.06z";
+
+    const postBody = document.querySelector('.post-body');
+    const headings = postBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    let tocHTML = '';
+    let idCounter = 0;
+    headings.forEach(h => {
+        if (!h.id) {
+            h.id = 'heading-' + (++idCounter);
+        }
+        const level = parseInt(h.tagName[1]);
+        const indent = 2 + (level - 1) * 1;
+        tocHTML += `<a class="toc-item toc-level-${level}" href="#${h.id}" style="padding-left:${indent}rem">${h.textContent}</a>`;
+    });
+
+    if (tocHTML) {
+        tocSidebar.innerHTML = `<div class="toc-title">目录</div>${tocHTML}`;
+    }
+
+    let tocOpen = false;
+    const tocOverlay = document.getElementById('toc-overlay');
+
+    function toggleToc() {
+        tocOpen = !tocOpen;
+        document.body.classList.toggle('toc-open', tocOpen);
+        tocToggle.querySelector('svg path').setAttribute('d', tocOpen ? tocClosePath : tocListPath);
+    }
+    tocToggle.addEventListener('click', toggleToc);
+
+    // 移动端：点击遮罩关闭目录
+    if (tocOverlay) {
+        tocOverlay.addEventListener('click', () => {
+            if (tocOpen) toggleToc();
+        });
+    }
+
+    // 点击目录项滚动到对应位置
+    tocSidebar.querySelectorAll('.toc-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(item.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // 移动端：点击目录项后自动关闭目录
+            if (window.innerWidth < 600 && tocOpen) {
+                toggleToc();
+            }
+        });
+    });
+
+    // 剥离 <pre> 内容中的 HTML 源码缩进
+    document.querySelectorAll('pre[data-indent]').forEach(pre => {
+        const spaces = parseInt(pre.dataset.indent) * 4;
+        const prefix = ' '.repeat(spaces);
+        pre.innerHTML = pre.innerHTML.split('\n').map(line => {
+            if (line.startsWith(prefix)) return line.slice(spaces);
+            return line;
+        }).join('\n');
+    });
+
+    // 滚动监听：高亮当前目录项
+    const tocItems = tocSidebar.querySelectorAll('.toc-item');
+    function updateActiveToc() {
+        let activeId = '';
+        headings.forEach(h => {
+            if (h.getBoundingClientRect().top <= 100) {
+                activeId = h.id;
+            }
+        });
+        tocItems.forEach(item => {
+            item.classList.toggle('toc-active', item.getAttribute('href') === '#' + activeId);
+        });
+    }
+    window.addEventListener('scroll', updateActiveToc);
+    updateActiveToc();
+</script>
+</body>
+</html>

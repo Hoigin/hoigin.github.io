@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用树莓派托管个人博客网站（二）：将Web应用通过内网穿透隧道部署到公网</title>
+
+    
+
+    <link rel="stylesheet" href="../../src/font-family/open-sans.css">
+
+    <!-- 文章通用样式（始终生效） -->
+    <link rel="stylesheet" href="../../src/styles/posts.css">
+
+    <!-- highlight.js 主题：浅色 / 深色，与博客主题同步切换 -->
+    <link rel="stylesheet" id="hljsLight" href="../../src/styles/stackoverflow-light.min.css" media="not all">
+    <link rel="stylesheet" id="hljsDark" href="../../src/styles/stackoverflow-dark.min.css" media="all">
+
+    <!-- 博客主题：浅色 / 深色 -->
+    <link rel="stylesheet" id="themeLight" href="../../src/styles/light.css" media="not all">
+    <link rel="stylesheet" id="themeDark" href="../../src/styles/dark.css" media="all">
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-left">
+            <a id="home-link" href="../../index.html" aria-label="返回主页">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg>
+            </a>
+            <button id="toc-toggle" aria-label="展开目录">
+                <svg viewBox="0 0 16 16"><path d="M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z"/></svg>
+            </button>
+        </div>
+        <button id="theme-toggle" aria-label="切换主题">
+            <svg viewBox="0 0 16 16"><path d="M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z"></path></svg>
+        </button>
+    </div>
+    <div class="page-body">
+        <nav class="toc-sidebar" id="toc-sidebar"></nav>
+        <div class="toc-overlay" id="toc-overlay"></div>
+        <div class="post-wrapper">
+            <article class="post-body">
+                <h1 id="用树莓派托管个人博客网站二将web应用通过内网穿透隧道部署到公网">用树莓派托管个人博客网站（二）：将Web应用通过内网穿透隧道部署到公网</h1>
+    <blockquote>
+        <p>使用在阿里云注册的域名（以下以 <code>hoigin.cn</code> 为例），通过 Cloudflare Tunnel 安全地将公网流量转发到家庭内网中的树莓派服务，无需公网 IP、无需端口映射，享受 Cloudflare 免费提供的 SSL/TLS 证书、DDoS 防护和 WAF 能力。本方案适合个人博客、NAS、Home Assistant、私有 API 等场景。</p>
+    </blockquote>
+    <hr>
+    <h2 id="购买域名并托管域名dns解析服务">🌐 购买域名并托管域名DNS解析服务</h2>
+    <h3 id="购买域名">购买域名</h3>
+    <p>登录<a href="https://www.aliyun.com/">阿里云官网</a>，进入<a href="https://dc.console.aliyun.com/">域名注册控制台</a>，搜索并购买一个合适的域名。一般来说后缀为 <code>.xyz</code> 或者 <code>.top</code> 这样的域名会比较便宜。购买成功之后需要实名认证，通常10分钟内就会生效（以下内容以 <code>hoigin.cn</code> 域名为例）。接着，在域名列表中找到 <code>hoigin.cn</code>，点击右侧「管理」进入详情页。找到注册信息中的DNS服务器这一栏，这里可以看到阿里云提供的两个DNS服务器网址。</p>
+    <h3 id="查询dns服务器网址">查询DNS服务器网址</h3>
+    <p>访问<a href="https://dash.cloudflare.com">Cloudflare官网</a>并注册账号，登录后点击 <strong>Add a site</strong>，输入 <code>hoigin.cn</code>，点击 Add site，然后选择免费套餐（足够个人博客网站使用了）。然后可以看到，Cloudflare 会显示两个 Nameserver，例如：</p>
+    <div class="post-code-block">
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs">lara.ns.cloudflare.com
+                rick.ns.cloudflare.com</code></pre>
+        </div>
+    </div>
+    <h3 id="设置托管服务">设置托管服务</h3>
+    <p>回到阿里云域名控制台，选择 <code>hoigin.cn</code> 域名，点击「DNS修改」，将阿里云提供的两个DNS服务器网址删除，改为 Cloudflare 提供的 Nameserver 地址。点击确认修改之后，等待 Cloudflare 邮件通知DNS解析托管服务生效即可。接着，在「Cloudflare 控制台 - DNS - 记录」中可以看到类似这样的内容：</p>
+    <div class="post-code-block">
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs">NS         hoigin.cn        lara.ns.cloudflare.com
+                NS         hoigin.cn        rick.ns.cloudflare.com</code></pre>
+        </div>
+    </div>
+    <p>这表示域名 <code>hoigin.cn</code> 的 Name Server 就是这两台服务器，该域名的 DNS 解析权已经交给 Cloudflare 的这两台服务器了。所有对该域名的 DNS 查询，都会被导向 <code>lara.ns.cloudflare.com</code> 和 <code>rick.ns.cloudflare.com</code> 这两台 Cloudflare 的 DNS 解析服务器，这两台服务器拥有 <code>hoigin.cn</code> 这个域名的权威解释权。</p>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>DNS（Domain Name System）解析服务是是一种将人类可读的域名（如 <code>www.example.com</code>）转换为计算机可识别的IP地址（如 <code>93.184.216.34</code>）的网络服务。其主要作用包括：</p>
+        <ul>
+            <li>域名到IP地址的映射：用户在浏览器中输入域名后，DNS服务器负责查找对应的IP地址，使设备能够连接到目标服务器。</li>
+            <li>提高访问效率：通过缓存机制，DNS可以减少重复查询，加快网页加载速度。</li>
+            <li>负载均衡与高可用：DNS可将一个域名解析到多个IP地址，实现流量分发和故障转移。</li>
+            <li>支持多种记录类型：如A记录（IPv4地址）、AAAA记录（IPv6地址）、CNAME（Canornical Name别名）、MX（邮件服务器）等，满足不同网络服务需求。</li>
+        </ul>
+        <p>把在阿里云购买的域名托管至 Cloudflare，就要把阿里云提供的DNS解析服务器网址更换为 Cloudflare 提供的，目的是为了使用 Cloudflare 的内网穿透服务 Cloudflare Tunnel，并享受 Cloudflare 免费提供的 SSL/TLS 证书、DDoS 防护和 WAF 能力（这三项服务在 Cloudflare 的 Free Plan 中都是默认启用的，不用额外调整设置）。</p>
+    </div>
+    <hr>
+    <h2 id="部署本地-web-服务参见上一篇文章">🔧部署本地 Web 服务（参见上一篇文章）</h2>
+    <p>确保树莓派上已运行一个 Web 服务，例如：</p>
+    <ul>
+        <li>Nginx 监听 <code>localhost:80</code></li>
+        <li>Flask/Gunicorn 监听 <code>localhost:8000</code></li>
+    </ul>
+    <p>可以用以下命令来测试本地访问是否正常，在树莓派终端中输入：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs">curl http://localhost
+                <span class="hljs-comment"># 应返回网页内容</span></code></pre>
+        </div>
+    </div>
+    <hr>
+    <h2 id="配置内网穿透隧道">🚇配置内网穿透隧道</h2>
+    <h3 id="内网穿透技术简介">内网穿透技术简介</h3>
+    <p>内网穿透（NAT Traversal，即 Network Address Translation Traversal）是一种用于突破局域网限制、实现公网访问私有网络中服务的技术。在典型的家庭或办公网络环境中，设备（比如树莓派）往往仅拥有私有 IP 地址（如 192.168.x.x），且受 NAT（网络地址转换）和防火墙策略保护，设备的 Web 服务（比如在树莓派上部署的个人博客网站）只能被局域网内的用户访问，而无法被公网上的用户直接访问。</p>
+    <p>内网穿透技术就是解决这个问题的一种解决方案。其核心原理是，在内网设备与一台具备公网 IP 地址的中继服务器之间建立一条持久、加密的通信通道，即内网穿透「隧道」（Tunnel），然后内网设备主动连接该服务器并持续维持连接，之后所有发往该服务器特定地址或端口的公网请求，都会通过这条隧道被转发到内网设备上的对应服务。</p>
+    <p>目前主流的内网穿透工具包括 frp（Fast Reverse Proxy）、ngrok（Next Generation Reverse Open-tunneling Gateway）、ZeroTier、Tailscale 等。接下来，我们将使用 Cloudflare 提供的工具，在树莓派上搭建隧道，使其运行的 Web 服务能够被全球用户访问。</p>
+    <h3 id="安装-cloudflared">安装 cloudflared</h3>
+    <p>为了使用 Cloudflare 提供的内网穿透服务，首先要在树莓派上安装可以向内网穿透隧道收发数据的客户端 Cloudflared。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 进入用户目录</span>
+                <span class="hljs-built_in">cd</span> ~
+                
+                <span class="hljs-comment"># 下载适用于树莓派 64 位系统的 .deb 包</span>
+                wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
+                
+                <span class="hljs-comment"># 安装</span>
+                <span class="hljs-comment"># -i 参数表示 install</span>
+                <span class="hljs-built_in">sudo</span> dpkg -i cloudflared-linux-arm64.deb
+                
+                <span class="hljs-comment"># 验证安装</span>
+                cloudflared --version
+                <span class="hljs-comment"># 输出类似：cloudflared version 2025.x.x</span></code></pre>
+        </div>
+    </div>
+    <p>安装成功后，用以下命令在 Cloudflared 客户端登录账号。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">cloudflared tunnel login</code></pre>
+        </div>
+    </div>
+    <ul>
+        <li>若树莓派有图形界面：自动打开浏览器，登录 Cloudflare</li>
+        <li>若无图形界面：复制终端给出的 URL 到电脑浏览器完成授权</li>
+        <li>成功后会在以下路径生成认证文件：<code>~/.cloudflared/cert.pem</code></li>
+    </ul>
+    <h3 id="创建并配置隧道">创建并配置隧道</h3>
+    <p>使用以下命令创建一条名为 <code>raspberrypi-tunnel</code> 的隧道。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">cloudflared tunnel create raspberrypi-tunnel</code></pre>
+        </div>
+    </div>
+    <p>创建成功后，此隧道的凭据文件将保存为 <code>~/.cloudflared/&lt;UUID&gt;.json</code> ，记住此 <code>&lt;UUID&gt;</code> ，配置文件中需要用到。接下来创建配置文件：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 创建配置文件</span>
+                nano ~/.cloudflared/config.yml</code></pre>
+        </div>
+    </div>
+    <p>在配置文件中填入以下内容（假设 Web 服务运行在 <code>localhost:80</code>）：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">yaml</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-attr">tunnel:</span> <span class="hljs-string">your-actual-uuid-here</span>  <span class="hljs-comment"># 替换为实际 UUID（不含 .json 后缀）</span>
+                <span class="hljs-attr">credentials-file:</span> <span class="hljs-string">/home/pi/.cloudflared/your-actual-uuid-here.json</span> <span class="hljs-comment"># 替换为实际 UUID</span>
+                
+                <span class="hljs-attr">ingress:</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-attr">hostname:</span> <span class="hljs-string">hoigin.cn</span>          <span class="hljs-comment"># 你的主域名</span>
+                    <span class="hljs-attr">service:</span> <span class="hljs-string">http://localhost:80</span> <span class="hljs-comment"># 树莓派本地服务地址</span>
+                  <span class="hljs-bullet">-</span> <span class="hljs-attr">service:</span> <span class="hljs-string">http_status:404</span>     <span class="hljs-comment"># 未匹配请求返回 404</span></code></pre>
+        </div>
+    </div>
+    <p>写好配置文件后，把 <code>hoigin.cn</code> 域名关联到创建好的隧道上。<code>route dns</code> 表示要为某个隧道配置 DNS 路由规则，即告诉 Cloudflare 的 DNS 解析服务器「当用户访问 <code>hoigin.cn</code> 这个域名时，请把流量通过指定的隧道转发到内网服务」。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">cloudflared tunnel route dns raspberrypi-tunnel hoigin.cn</code></pre>
+        </div>
+    </div>
+    <p>此命令自动在 Cloudflare DNS 中添加 CNAME 记录，可以登录<a href="https://dash.cloudflare.com">Cloudflare官网</a>后在「Cloudflare 控制台 - DNS - 记录」中查看，大概形式如下所示：</p>
+    <div class="post-code-block">
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">hoigin.cn     CNAME     &lt;UUID&gt;.cfargotunnel.com.</code></pre>
+        </div>
+    </div>
+    <p>在标准 DNS 语义中，这表示 <code>hoigin.cn</code> 这个域名的别名是另一个域名 <code>&lt;UUID&gt;.cfargotunnel.com</code> ，当有用户查询 <code>hoigin.cn</code> 这个域名的时候，DNS 解析服务器就会去查询 <code>&lt;UUID&gt;.cfargotunnel.com</code> 这个域名的 IP 地址。但是，虽然这两个域名的关系在形式上是 CNAME，但 <code>&lt;UUID&gt;.cfargotunnel.com</code> 并不真的存在于公共 DNS 中，它只是 Cloudflare 内部用于标识隧道的一个逻辑端点名称。Cloudflare 看到它 CNAME 指向一个 <code>.cfargotunnel.com</code> 域名，就不会继续向外递归查询这个 CNAME 的 IP，而是直接返回 Cloudflare 自己的边缘 IP 地址，同时在内部标记这个请求属于隧道 <code>&lt;UUID&gt;</code> ，并查找是否有活跃的 Cloudflared 连接（来自树莓派），查询到有之后就通过已建立的加密隧道将 Web 服务转发至用户端。</p>
+    <div class="mermaid">graph TD
+        A[用户访问 hoigin.cn]
+        A --&gt;|DNS查询| B[请求到达Cloudflare&lt;br/&gt;权威DNS服务器]
+        B --&gt;|DNS服务器返回边缘节点IP地址|C[请求到达Cloudflare&lt;br/&gt;边缘节点]
+        C --&gt; D[边缘节点发现&lt;br/&gt;hoigin.cn对应&lt;br/&gt;&amp;ltUUID&amp;gt.cfargotunnel.com]
+        D --&gt; E[内部查表发现&lt;br/&gt;&amp;ltUUID&amp;gt.cfargotunnel.com&lt;br/&gt;对应隧道UUID&lt;/br&gt;接着查找该UUID是否有&lt;br/&gt;活跃的cloudflared连接&lt;br/&gt;]
+        E --&gt;|有!来自树莓派！&lt;/br&gt;通过已建立的加密隧道转发请求| F[请求到达树莓派上的&lt;br/&gt;cloudflared]
+        F --&gt; G[转发树莓派的&lt;br/&gt;本地 Web 服务]
+        style A fill:#d7f3e3,stroke:#000,color:black
+        style B fill:#d7f3e3,stroke:#000,color:black
+        style C fill:#d7f3e3,stroke:#000,color:black
+        style D fill:#d7f3e3,stroke:#000,color:black
+        style E fill:#d7f3e3,stroke:#000,color:black
+        style F fill:#d7f3e3,stroke:#000,color:black
+        style G fill:#d7f3e3,stroke:#000,color:black</div>
+    <p>总之，到这一步就把内网穿透隧道和域名关联好了。</p>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>边缘节点（Edge Node），也称为接入点（Point of Presence，PoP），是在全球部署的服务器节点，用于就近处理用户请求。在现代互联网架构中是提升网站性能与安全的关键基础设施。截至 2025 年，Cloudflare 在超过 120 个国家和地区运营着 300 多个边缘节点，构成一个分布式的安全与加速网络。当用户访问使用 Cloudflare 的网站或通过 Tunnel 暴露的内网服务时，流量首先到达离用户最近的边缘节点，再由它负责安全过滤、缓存或通过加密隧道转发至源站。这种架构既提升了访问速度，又隐藏了真实服务器位置，增强了安全性。</p>
+    </div>
+    <hr>
+    <h2 id="部署隧道服务至树莓派后台">🔄部署隧道服务至树莓派后台</h2>
+    <h3 id="前台测试">前台测试</h3>
+    <p>在终端中输入以下命令启动隧道服务。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">cloudflared tunnel run raspberrypi-tunnel</code></pre>
+        </div>
+    </div>
+    <ul>
+        <li>日志中可能会出现一些 警告（WARN）和重试（Retrying），但日志中只要出现 <code>Registered tunnel connection</code> 表明隧道已建立并注册成功。这些重试警告往往是因为某些 Cloudflare 边缘 IP 节点暂时不可达或网络波动，只要<code>cloudflared</code> 自动重试并最终连上了其他可用节点就不会有问题，是正常容错行为。此时可以在手机或者电脑中输入 <code>https://hoigin.cn</code> 验证是否能从公网连接到网站。</li>
+        <li>验证一切正常后，按 <code>Ctrl+C</code> 退出即可。</li>
+    </ul>
+    <h3 id="创建-systemd-服务">创建 systemd 服务</h3>
+    <p>在终端输入以下命令，在 <code>systemd/system</code> 路径下创建一项名为 <code>cloudflared.service</code> 的后台服务。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs"><span class="hljs-built_in">sudo</span> nano /etc/systemd/system/cloudflared.service</code></pre>
+        </div>
+    </div>
+    <p>打开 <code>cloudflared.service</code> 文件，写入这项后台服务的配置，如下所示：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">ini</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11
+                12
+                13
+                14
+                15
+                16
+                17
+                18
+                19
+                20
+                21
+                22
+                23
+                24
+                25
+                26
+                27
+                28
+                29
+                30</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-section">[Unit]</span>
+                <span class="hljs-comment">; 服务的简要描述，显示在 systemctl status 等命令中</span>
+                <span class="hljs-attr">Description</span>=Cloudflare Tunnel for hoigin.cn
+                
+                <span class="hljs-comment">; 指定该服务在网络已就绪后再启动，确保 cloudflared 能正常联网</span>
+                <span class="hljs-attr">After</span>=network.target
+                
+                <span class="hljs-section">[Service]</span>
+                <span class="hljs-comment">; Type=exec 表示主进程就是 ExecStart 启动的程序（推荐用于 cloudflared）</span>
+                <span class="hljs-attr">Type</span>=exec
+                
+                <span class="hljs-comment">; 以普通用户 &#x27;pi&#x27; 身份运行服务，避免使用 root 提高安全性</span>
+                <span class="hljs-attr">User</span>=pi
+                
+                <span class="hljs-comment">; 启动命令：运行名为 raspberrypi-tunnel 的 Cloudflare 隧道</span>
+                <span class="hljs-comment">; 注意：cloudflared 会自动读取 ~/.cloudflared/ 下的配置和凭据</span>
+                <span class="hljs-attr">ExecStart</span>=/usr/bin/cloudflared tunnel run raspberrypi-tunnel
+                
+                <span class="hljs-comment">; 若服务异常退出（非零状态），则自动重启</span>
+                <span class="hljs-attr">Restart</span>=<span class="hljs-literal">on</span>-failure
+                
+                <span class="hljs-comment">; 重启前等待 5 秒，避免频繁崩溃导致资源浪费</span>
+                <span class="hljs-attr">RestartSec</span>=<span class="hljs-number">5</span>
+                
+                <span class="hljs-comment">; 终止服务时仅杀死主进程（cloudflared），不杀其子进程（实际无子进程，此设置更安全）</span>
+                <span class="hljs-attr">KillMode</span>=process
+                
+                <span class="hljs-section">[Install]</span>
+                <span class="hljs-comment">; 设置服务启用（systemctl enable）后，在 multi-user.target（即常规多用户模式）下自动启动</span>
+                <span class="hljs-attr">WantedBy</span>=multi-user.target</code></pre>
+        </div>
+    </div>
+    <p>写入保存好之后，在终端启用服务即可。</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:2.2em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2
+                3
+                4
+                5
+                6
+                7
+                8
+                9
+                10
+                11</pre>
+            <pre data-indent="4"><code class="hljs"><span class="hljs-comment"># 重新加载 systemd 配置文件</span>
+                <span class="hljs-built_in">sudo</span> systemctl daemon-reload
+                
+                <span class="hljs-comment"># 设置服务开机自启动</span>
+                <span class="hljs-built_in">sudo</span> systemctl <span class="hljs-built_in">enable</span> cloudflared
+                
+                <span class="hljs-comment"># 启动服务</span>
+                <span class="hljs-built_in">sudo</span> systemctl start cloudflared
+                
+                <span class="hljs-comment"># 检查服务是否正常运行</span>
+                systemctl status cloudflared</code></pre>
+        </div>
+    </div>
+    <h3 id="验证访问效果">验证访问效果</h3>
+    <p>在任意设备浏览器中访问 <code>https://hoigin.cn</code>，不仅可以看到树莓派上部署的网站内容，而且地址栏显示绿色锁图标（HTTPS 由 Cloudflare 自动签发）。本项目的部署方案无需公网 IP，无需路由器设置（特别在企业级局域网中，普通用户一般没有路由器设置权限），还能享受 Cloudflare 免费提供的附加优势：</p>
+    <table>
+        <thead>
+            <tr>
+                <th>功能</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>自动 HTTPS</td>
+                <td>免费 SSL/TLS 证书，强制加密</td>
+            </tr>
+            <tr>
+                <td>DDoS 防护</td>
+                <td>自动过滤大规模流量攻击</td>
+            </tr>
+            <tr>
+                <td>WAF（Web Application Firewall）</td>
+                <td>阻止常见 Web 攻击（SQL 注入、XSS 等）</td>
+            </tr>
+            <tr>
+                <td>全球 CDN （Content Delivery Network）加速</td>
+                <td>用户就近接入 Cloudflare 节点</td>
+            </tr>
+            <tr>
+                <td>隐私保护</td>
+                <td>真实 IP 对外完全隐藏</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>DDoS 全称为「分布式拒绝服务攻击」（Distributed Denial of Service）。这种攻击通过控制大量被感染的设备（即「僵尸网络」）向目标服务器发送海量请求，导致服务器资源耗尽，无法正常响应合法用户的访问。Cloudflare 的 DDoS 防护 能够自动识别并过滤异常流量，在攻击到达源服务器之前将其拦截，从而保障网站的持续可用性。</p>
+    </div>
+    <div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg class="octicon octicon-light-bulb" viewBox="0 0 16 16" width="16" height="16"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>Tip</p>
+        <p>HTTPS（HyperText Transfer Protocol Secure，超文本传输安全协议）是 HTTP 的安全版本，它通过加密机制确保用户与网站之间的数据传输不被窃听或篡改。简单地说，HTTPS 就是在标准 HTTP 协议的基础上，叠加了 SSL/TLS 加密层，从而实现安全通信。因此，部署 HTTPS 必须依赖有效的 SSL/TLS 证书。实现 HTTPS 的核心技术是 SSL/TLS 协议：</p>
+        <ul>
+            <li>SSL（Secure Sockets Layer，安全套接层）是早期的加密协议，现已基本被弃用。</li>
+            <li>TLS（Transport Layer Security，传输层安全协议）是 SSL 的继任者，目前广泛用于现代网络通信中。</li>
+        </ul>
+        <p>尽管 SSL 已经基本弃用，但大家总是习惯把 HTTPS 的加密协议叫做 SSL/TLS 协议。当用户访问一个启用 HTTPS 的网站时，浏览器会与服务器进行 TLS 握手，验证服务器提供的 SSL/TLS 证书（由可信的证书颁发机构签发），然后建立加密通道。这样，即使数据在传输过程中被截获，攻击者也无法读取其内容。</p>
+    </div>
+    <hr>
+    <h2 id="常见问题排查">❓常见问题排查</h2>
+    <h3 id="访问-hoigincn-显示-404">访问 <a href="http://hoigin.cn">hoigin.cn</a> 显示 404？</h3>
+    <ul>
+        <li>检查 <code>config.yml</code> 中 <code>hostname</code> 是否拼写正确（区分大小写）</li>
+        <li>确保本地服务正在运行：<code>sudo systemctl status nginx</code></li>
+    </ul>
+    <h3 id="隧道无法连接">隧道无法连接？</h3>
+    <ul>
+        <li>检查树莓派能否访问公网：<code>ping 8.8.8.8</code></li>
+        <li>确保防火墙未阻止出站 UDP（Cloudflare Tunnel 使用 QUIC/UDP）</li>
+    </ul>
+    <h3 id="想绑定子域名如-bloghoigincn">想绑定子域名（如 <a href="http://blog.hoigin.cn">blog.hoigin.cn</a>）？</h3>
+    <p>在 <code>config.yml</code> 中添加新规则：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">yaml</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1
+                2</pre>
+            <pre data-indent="4"><code class="hljs">  <span class="hljs-attr">hostname:</span> <span class="hljs-string">blog.hoigin.cn</span>
+                  <span class="hljs-attr">service:</span> <span class="hljs-string">http://localhost:8000</span></code></pre>
+        </div>
+    </div>
+    <p>然后执行：</p>
+    <div class="post-code-block">
+        <span class="post-code-lang">bash</span>
+        <div class="post-code-content" style="grid-template-columns:1.6em 1fr">
+            <pre class="post-code-line-numbers" data-indent="4">1</pre>
+                <pre><code class="hljs">cloudflared tunnel route dns raspberrypi-tunnel blog.hoigin.cn</code></pre>
+        </div>
+    </div>
+    <h3 id="浏览器访问不跳转-https">浏览器访问不跳转 HTTPS ？</h3>
+    <p>实测发现 Chrome 浏览器会自动跳转 HTTPS，而 Safari 浏览器仍访问 HTTP，其根本原因在于浏览器行为差异。Chrome 浏览器采用了 HSTS（HTTP Strict Transport Security）机制，默认启用了自动将 HTTP 升级为 HTTPS的试探性功能，而 Safari 浏览器并没有此功能。由于 SSL/TLS 证书是由 Cloudflare 签发，所以可以在 Cloudflare 的边缘节点处将 HTTP 请求重定向至 HTTPS。具体操作是，登录进入 Cloudflare 仪表盘，选择 <code>hoigin.cn</code> 域名，选择 SSL/TLS 并点击「边缘节点」，然后选择「始终启用HTTPS」即可。</p>
+            </article>
+        </div>
+    </div>
+
+<script>
+
+    // ── 主题切换（与主页一致，默认深色） ──────────────────────────────
+    // 切换时同步刷新 Mermaid 图表主题：还原原始源码、移除 data-processed、
+    // 以新主题调用 mermaid.initialize() + mermaid.run() 重新渲染
+    const lightSheet = document.getElementById('themeLight');
+    const darkSheet = document.getElementById('themeDark');
+    const hljsLight = document.getElementById('hljsLight');
+    const hljsDark = document.getElementById('hljsDark');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    const sunPath = "M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z";
+    const moonPath = "M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z";
+
+    function setIcon(path) {
+        themeToggle.querySelector('svg path').setAttribute('d', path);
+    }
+
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') {
+        lightSheet.media = 'all';
+        darkSheet.media = 'not all';
+        hljsLight.media = 'all';
+        hljsDark.media = 'not all';
+        setIcon(sunPath);
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = darkSheet.media === 'all';
+        lightSheet.media = isDark ? 'all' : 'not all';
+        darkSheet.media = isDark ? 'not all' : 'all';
+        hljsLight.media = isDark ? 'all' : 'not all';
+        hljsDark.media = isDark ? 'not all' : 'all';
+        setIcon(isDark ? sunPath : moonPath);
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+
+        const mermaidFont = '"Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif';
+
+        // 切换主题时重新渲染 Mermaid 图表
+        if (typeof mermaid !== 'undefined') {
+            const mermaidTheme = isDark ? 'default' : 'dark';
+            document.querySelectorAll('.mermaid').forEach(el => {
+                el.removeAttribute('data-processed');
+                el.innerHTML = el.getAttribute('data-original');
+            });
+            mermaid.initialize({ startOnLoad: false, theme: mermaidTheme, themeVariables: { fontFamily: mermaidFont } });
+            mermaid.run();
+        }
+    });
+
+
+    if (document.querySelector('.mermaid')) {
+        document.querySelectorAll('.mermaid').forEach(el => {
+            el.setAttribute('data-original', el.innerHTML);
+        });
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+        s.onload = () => {
+            const theme = saved === 'dark' ? 'dark' : 'default';
+            const font = '"Open Sans", "PingFang SC", "Microsoft YaHei", sans-serif';
+            mermaid.initialize({ startOnLoad: false, theme, themeVariables: { fontFamily: font } });
+            mermaid.run();
+        };
+        document.head.appendChild(s);
+    }
+
+    // ── 页面内跳转：定位到顶栏下方 ────────────────────────────────────
+    const topbar = document.querySelector('.topbar');
+
+    function scrollToBelowTopbar(target) {
+        const offset = topbar.getBoundingClientRect().height;
+        window.scrollTo({ behavior: 'smooth', top: target.getBoundingClientRect().top + window.scrollY - offset });
+    }
+
+    document.querySelectorAll('.post-body a[href^="#"]').forEach(link => {
+        link.addEventListener('click', e => {
+            const id = link.getAttribute('href').slice(1);
+            const target = document.getElementById(decodeURIComponent(id));
+            if (target) { e.preventDefault(); scrollToBelowTopbar(target); }
+        });
+    });
+
+    document.querySelectorAll('.footnote-backref').forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.getElementById(decodeURIComponent(link.getAttribute('href').slice(1)));
+            if (target) scrollToBelowTopbar(target);
+        });
+    });
+
+    // ── 目录生成与切换 ────────────────────────────────────────────────
+    const tocToggle = document.getElementById('toc-toggle');
+    const tocSidebar = document.getElementById('toc-sidebar');
+    const tocListPath = "M3 3.75h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5zm2 4h8a.75.75 0 010 1.5H5a.75.75 0 010-1.5zm-2 4h10a.75.75 0 010 1.5H3a.75.75 0 010-1.5z";
+    const tocClosePath = "M2.72 2.72a.75.75 0 011.06 0L8 6.94l4.22-4.22a.75.75 0 011.06 1.06L9.06 8l4.22 4.22a.75.75 0 01-1.06 1.06L8 9.06l-4.22 4.22a.75.75 0 01-1.06-1.06L6.94 8 2.72 3.78a.75.75 0 010-1.06z";
+
+    const postBody = document.querySelector('.post-body');
+    const headings = postBody.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    let tocHTML = '';
+    let idCounter = 0;
+    headings.forEach(h => {
+        if (!h.id) {
+            h.id = 'heading-' + (++idCounter);
+        }
+        const level = parseInt(h.tagName[1]);
+        const indent = 2 + (level - 1) * 1;
+        tocHTML += `<a class="toc-item toc-level-${level}" href="#${h.id}" style="padding-left:${indent}rem">${h.textContent}</a>`;
+    });
+
+    if (tocHTML) {
+        tocSidebar.innerHTML = `<div class="toc-title">目录</div>${tocHTML}`;
+    }
+
+    let tocOpen = false;
+    const tocOverlay = document.getElementById('toc-overlay');
+
+    function toggleToc() {
+        tocOpen = !tocOpen;
+        document.body.classList.toggle('toc-open', tocOpen);
+        tocToggle.querySelector('svg path').setAttribute('d', tocOpen ? tocClosePath : tocListPath);
+    }
+    tocToggle.addEventListener('click', toggleToc);
+
+    // 移动端：点击遮罩关闭目录
+    if (tocOverlay) {
+        tocOverlay.addEventListener('click', () => {
+            if (tocOpen) toggleToc();
+        });
+    }
+
+    // 点击目录项滚动到对应位置
+    tocSidebar.querySelectorAll('.toc-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.querySelector(item.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // 移动端：点击目录项后自动关闭目录
+            if (window.innerWidth < 600 && tocOpen) {
+                toggleToc();
+            }
+        });
+    });
+
+    // 剥离 <pre> 内容中的 HTML 源码缩进
+    document.querySelectorAll('pre[data-indent]').forEach(pre => {
+        const spaces = parseInt(pre.dataset.indent) * 4;
+        const prefix = ' '.repeat(spaces);
+        pre.innerHTML = pre.innerHTML.split('\n').map(line => {
+            if (line.startsWith(prefix)) return line.slice(spaces);
+            return line;
+        }).join('\n');
+    });
+
+    // 滚动监听：高亮当前目录项
+    const tocItems = tocSidebar.querySelectorAll('.toc-item');
+    function updateActiveToc() {
+        let activeId = '';
+        headings.forEach(h => {
+            if (h.getBoundingClientRect().top <= 100) {
+                activeId = h.id;
+            }
+        });
+        tocItems.forEach(item => {
+            item.classList.toggle('toc-active', item.getAttribute('href') === '#' + activeId);
+        });
+    }
+    window.addEventListener('scroll', updateActiveToc);
+    updateActiveToc();
+</script>
+</body>
+</html>

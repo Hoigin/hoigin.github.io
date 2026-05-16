@@ -45,7 +45,7 @@ function scanPosts(): Array<{ title: string; date: string; link: string }> {
 
         const metaFile = path.join(entryPath, 'meta.yaml');
         if (!fs.existsSync(metaFile)) {
-            console.warn(`目录 ${entry} 下缺少 meta.yaml，跳过。`);
+            console.warn(`目录 ${entry} 下缺少 meta.yaml 文件，跳过。`);
             continue;
         }
 
